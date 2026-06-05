@@ -48,11 +48,15 @@ exports.handler = async (event) => {
 
   const key = event.queryStringParameters?.key;
   if (!key) {
-    return { statusCode: 400, headers, body: JSON.stringify({ error: '缺少 key 参数' }) };
+    return { statusCode: 400, headers, body: JSON.stringify({ error: '缺少 key 参数', qs: JSON.stringify(event.queryStringParameters) }) };
   }
 
-  if (!process.env.SUPABASE_URL) {
-    return { statusCode: 500, headers, body: JSON.stringify({ error: 'SUPABASE_URL 环境变量未设置' }) };
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return { statusCode: 500, headers, body: JSON.stringify({
+      error: '环境变量未设置',
+      hasUrl: !!process.env.SUPABASE_URL,
+      hasKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY
+    })};
   }
 
   try {
@@ -68,7 +72,7 @@ exports.handler = async (event) => {
     }
 
     if (event.httpMethod === 'PUT') {
-      const body = JSON.parse(event.body || '{}');
+      const body = typeof event.body === 'string' ? JSON.parse(event.body) : (event.body || {});
       const existing = await supabaseFetch('GET', `/rest/v1/class_sync_data?select=id&id=eq.${encodeURIComponent(key)}`);
       let result;
       if (existing.status >= 200 && existing.status < 300 && existing.data && existing.data.length > 0) {
@@ -86,6 +90,6 @@ exports.handler = async (event) => {
 
     return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
   } catch (err) {
-    return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
+    return { statusCode: 500, headers, body: JSON.stringify({ error: err.message, stack: err.stack }) };
   }
 };
