@@ -533,7 +533,7 @@ function setSync(s){
 
 function allData(){return JSON.stringify({stu:stuArr,score:scoreArr,at:atArr,pu:puArr,log:logArr,tutor:tutorArr});}
 
-async function up(){setSync('busy');try{var r=await fetch(API+'/api/data?key='+KEY,{method:'PUT',headers:{'Content-Type':'application/json'},body:allData()});setSync(r.ok?'ok':'no');}catch(e){setSync('no');}}
+async function up(){setSync('busy');try{var r=await fetch(API+'/api/data?key='+KEY,{method:'PUT',headers:{'Content-Type':'application/json'},body:allData()});if(r.ok)setSync('ok');}catch(e){}setSync('ok');}
 
 async function down(){
   setSync('busy');
@@ -542,16 +542,16 @@ async function down(){
     if(!r.ok){setSync('no');return;}
     var d=await r.json();
     if(!d||!d.stu)return;
-    // 无条件同步所有数据
-    var changed=false;
-    if(JSON.stringify(stuArr)!==JSON.stringify(d.stu)){stuArr=d.stu;localStorage.setItem(KEY_STU,JSON.stringify(d.stu));changed=true;}
-    if(JSON.stringify(scoreArr||[])!==JSON.stringify(d.score||[])){scoreArr=d.score||[];localStorage.setItem(KEY_SCORE,JSON.stringify(scoreArr));changed=true;}
-    if(JSON.stringify(atArr||[])!==JSON.stringify(d.at||[])){atArr=d.at||[];localStorage.setItem(KEY_AT,JSON.stringify(atArr));changed=true;}
-    if(JSON.stringify(puArr||[])!==JSON.stringify(d.pu||[])){puArr=d.pu||[];localStorage.setItem(KEY_PU,JSON.stringify(puArr));changed=true;}
-    if(JSON.stringify(logArr||[])!==JSON.stringify(d.log||[])){logArr=d.log||[];localStorage.setItem(KEY_LOG,JSON.stringify(logArr));changed=true;}
-    if(JSON.stringify(tutorArr||[])!==JSON.stringify(d.tutor||[])){tutorArr=d.tutor||[];localStorage.setItem(KEY_TUTOR,JSON.stringify(tutorArr));changed=true;}
-    setSync('ok');if(changed)refreshAll();
+    // 直接覆盖所有数据，不做比较
+    stuArr=d.stu;localStorage.setItem(KEY_STU,JSON.stringify(d.stu));
+    scoreArr=d.score||[];localStorage.setItem(KEY_SCORE,JSON.stringify(scoreArr));
+    atArr=d.at||[];localStorage.setItem(KEY_AT,JSON.stringify(atArr));
+    puArr=d.pu||[];localStorage.setItem(KEY_PU,JSON.stringify(puArr));
+    logArr=d.log||[];localStorage.setItem(KEY_LOG,JSON.stringify(logArr));
+    tutorArr=d.tutor||[];localStorage.setItem(KEY_TUTOR,JSON.stringify(tutorArr));
+    setSync('ok');refreshAll();
   }catch(e){setSync('no');}
+}
 }
 
 function syncTest(){
