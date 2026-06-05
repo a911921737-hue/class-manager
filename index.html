@@ -542,13 +542,15 @@ async function down(){
     if(!r.ok){setSync('no');return;}
     var d=await r.json();
     if(!d||!d.stu)return;
-    stuArr=d.stu;localStorage.setItem(KEY_STU,JSON.stringify(d.stu));
-    if(d.score&&d.score.length>0){scoreArr=d.score;localStorage.setItem(KEY_SCORE,JSON.stringify(d.score));}
-    if(d.at&&d.at.length>0){atArr=d.at;localStorage.setItem(KEY_AT,JSON.stringify(d.at));}
-    if(d.pu&&d.pu.length>0){puArr=d.pu;localStorage.setItem(KEY_PU,JSON.stringify(d.pu));}
-    if(d.log&&d.log.length>0){logArr=d.log;localStorage.setItem(KEY_LOG,JSON.stringify(d.log));}
-    if(d.tutor&&d.tutor.length>0){tutorArr=d.tutor;localStorage.setItem(KEY_TUTOR,JSON.stringify(d.tutor));}
-    setSync('ok');refreshAll();
+    // 无条件同步所有数据
+    var changed=false;
+    if(JSON.stringify(stuArr)!==JSON.stringify(d.stu)){stuArr=d.stu;localStorage.setItem(KEY_STU,JSON.stringify(d.stu));changed=true;}
+    if(JSON.stringify(scoreArr||[])!==JSON.stringify(d.score||[])){scoreArr=d.score||[];localStorage.setItem(KEY_SCORE,JSON.stringify(scoreArr));changed=true;}
+    if(JSON.stringify(atArr||[])!==JSON.stringify(d.at||[])){atArr=d.at||[];localStorage.setItem(KEY_AT,JSON.stringify(atArr));changed=true;}
+    if(JSON.stringify(puArr||[])!==JSON.stringify(d.pu||[])){puArr=d.pu||[];localStorage.setItem(KEY_PU,JSON.stringify(puArr));changed=true;}
+    if(JSON.stringify(logArr||[])!==JSON.stringify(d.log||[])){logArr=d.log||[];localStorage.setItem(KEY_LOG,JSON.stringify(logArr));changed=true;}
+    if(JSON.stringify(tutorArr||[])!==JSON.stringify(d.tutor||[])){tutorArr=d.tutor||[];localStorage.setItem(KEY_TUTOR,JSON.stringify(tutorArr));changed=true;}
+    setSync('ok');if(changed)refreshAll();
   }catch(e){setSync('no');}
 }
 
