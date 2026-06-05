@@ -634,7 +634,7 @@ async function syncTest() {
   if (!url || !key) return alert('请先填写服务器地址和班级密钥');
   setSyncStatus('syncing');
   try {
-    const res = await fetchWithTimeout(url + '/health', {}, 8000);
+    const res = await fetchWithTimeout(url + '/api/data?key=pingtest', {}, 8000);
     if (res.ok) {
       setSyncStatus('connected');
       alert('✅ 连接成功！服务器已就绪。');
