@@ -572,8 +572,8 @@ async function syncDownload() {
     if (!res.ok) { setSyncStatus('disconnected'); return false; }
     const data = await res.json();
     if (!data) { setSyncStatus('connected'); return false; }
-    if (data.stu && data.stu.length>0) { stuArr = data.stu; localStorage.setItem(KEY_STU, JSON.stringify(data.stu)); }
-    if (data.score && data.score.length>0) { scoreArr = data.score; localStorage.setItem(KEY_SCORE, JSON.stringify(data.score)); }
+    if (data.stu && data.stu.length>stuArr.length) { stuArr = data.stu; localStorage.setItem(KEY_STU, JSON.stringify(data.stu)); }
+    if (data.score && data.score.length>scoreArr.length) { scoreArr = data.score; localStorage.setItem(KEY_SCORE, JSON.stringify(data.score)); }
     if (data.at && data.at.length>0) { atArr = data.at; localStorage.setItem(KEY_AT, JSON.stringify(data.at)); }
     if (data.pu && data.pu.length>0) { puArr = data.pu; localStorage.setItem(KEY_PU, JSON.stringify(data.pu)); }
     if (data.log && data.log.length>0) { logArr = data.log; localStorage.setItem(KEY_LOG, JSON.stringify(data.log)); }
@@ -619,7 +619,7 @@ function startSyncPolling() {
       if (!data) return;
       const currentPayload = getSyncPayload();
       if (currentPayload === lastSyncData) return;
-      if (data.stu && data.stu.length>0) { stuArr = data.stu; localStorage.setItem(KEY_STU, JSON.stringify(data.stu)); }
+      if (data.stu && data.stu.length>stuArr.length) { stuArr = data.stu; localStorage.setItem(KEY_STU, JSON.stringify(data.stu)); }
       if (data.score && data.score.length>0) { scoreArr = data.score; localStorage.setItem(KEY_SCORE, JSON.stringify(data.score)); }
       if (data.at && data.at.length>0) { atArr = data.at; localStorage.setItem(KEY_AT, JSON.stringify(data.at)); }
       if (data.pu && data.pu.length>0) { puArr = data.pu; localStorage.setItem(KEY_PU, JSON.stringify(data.pu)); }
