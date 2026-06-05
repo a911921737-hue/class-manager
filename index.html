@@ -527,13 +527,11 @@ async function up(){ss('busy');try{var p=JSON.parse(ad());var ex=await fetch('ht
 async function down(){try{var r=await fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?select=data&id=eq.class2025',{headers:{'apikey':'sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Authorization':'Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd'}});var d=await r.json();if(!d||!d[0]||!d[0].data)return;var dd=d[0].data;
 // 编辑中跳过同步
 if(document.querySelector('.modal[style*="flex"]'))return;
-var cp=JSON.stringify(atArr)+'|'+JSON.stringify(puArr)+'|'+JSON.stringify(logArr);
-var cd=JSON.stringify(dd.at||[])+'|'+JSON.stringify(dd.pu||[])+'|'+JSON.stringify(dd.log||[]);
-if(cp===cd){ss('ok');return;}
-atArr=dd.at||[];localStorage.setItem(KEY_AT,JSON.stringify(atArr));
-puArr=dd.pu||[];localStorage.setItem(KEY_PU,JSON.stringify(puArr));
-logArr=dd.log||[];localStorage.setItem(KEY_LOG,JSON.stringify(logArr));
-ss('ok');refreshAll();
+var ch=0;
+if(dd.pu&&dd.pu.length>puArr.length){puArr=dd.pu;localStorage.setItem(KEY_PU,JSON.stringify(puArr));ch=1;}
+if(dd.at&&dd.at.length>atArr.length){atArr=dd.at;localStorage.setItem(KEY_AT,JSON.stringify(atArr));ch=1;}
+if(dd.log&&dd.log.length>logArr.length){logArr=dd.log;localStorage.setItem(KEY_LOG,JSON.stringify(logArr));ch=1;}
+ss('ok');if(ch)refreshAll();
 }catch(e){ss('no');}}
 function syncTest(){ss('busy');fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?select=id&id=eq.pingtest',{headers:{'apikey':'sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Authorization':'Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd'}}).then(function(r){if(r.ok){ss('ok');alert('连接成功！');}else{ss('no');alert('无法连接');}}).catch(function(){ss('no');alert('无法连接');});}
 var syncUpload=up,syncDownload=down;
@@ -764,8 +762,8 @@ function importTutorData(){
   var t=document.getElementById("nowTime");if(t)t.textContent=new Date().toLocaleString('zh-CN');
   // 启动自动同步
   startSync();
-  // 如果有新恢复的数据，立即上传到云端
-  if(needUpload){setTimeout(function(){up();},500);}
+  // 上传本地数据到云端（确保其他设备能同步到）
+  setTimeout(function(){up();},1000);
   };
   </script>
   <script>
