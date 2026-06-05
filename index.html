@@ -739,11 +739,21 @@ function importTutorData(){
   tutorArr=data;
   localStorage.setItem(KEY_TUTOR,JSON.stringify(tutorArr));
   renderTutor();
+  // 自动同步电话到学生档案
+  let cnt=0;
+  stuArr.forEach(s=>{const t=tutorArr.find(x=>x.name===s.name);if(t){if(t.tel1){s.tel=t.tel1;cnt++;}if(t.tel2){s.tel2=t.tel2;cnt++;}}});
+  localStorage.setItem(KEY_STU,JSON.stringify(stuArr));
+  renderStu();
   syncUpload();
-  alert("✅ 成功导入 46 条导师关系数据！");
+  alert("✅ 成功导入 46 条导师关系数据，并自动同步了 "+cnt+" 个电话到学生档案！");
 }
 
-  window.onload=function(){try{refreshAll()}catch(e){console.error(e)}switchPage("home");document.getElementById("nowTime").textContent=new Date().toLocaleString('zh-CN');loadSyncConfig();startSyncPolling();syncDownload();};
+  window.onload=function(){try{
+  // 如果已有导师数据但学生缺电话2，自动同步一次
+  if(tutorArr&&tutorArr.length>0&&stuArr.length>0&&!stuArr[0].tel2){
+    let c=0;stuArr.forEach(s=>{const t=tutorArr.find(x=>x.name===s.name);if(t){if(t.tel1){s.tel=t.tel1;c++;}if(t.tel2){s.tel2=t.tel2;c++;}}});localStorage.setItem(KEY_STU,JSON.stringify(stuArr));
+  }
+  refreshAll()}catch(e){console.error(e)}switchPage("home");document.getElementById("nowTime").textContent=new Date().toLocaleString('zh-CN');loadSyncConfig();startSyncPolling();syncDownload();};
   </script>
   <script>
   function toggleSidebar(show){
