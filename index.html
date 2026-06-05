@@ -552,21 +552,7 @@ function saveSyncConfig() {
   return { url, key };
 }
 
-function setSyncStatus(state) {
-  const dot = document.getElementById('syncDot');
-  const txt = document.getElementById('syncText');
-  if (!dot || !txt) return;
-  if (state === 'connected') {
-    dot.style.background = 'var(--green)';
-    txt.textContent = '已同步';
-  } else if (state === 'syncing') {
-    dot.style.background = 'var(--orange)';
-    txt.textContent = '同步中…';
-  } else {
-    dot.style.background = 'var(--text4)';
-    txt.textContent = '未连接';
-  }
-}
+
 
 function getSyncPayload() {
   return JSON.stringify({
@@ -574,53 +560,54 @@ function getSyncPayload() {
   });
 }
 
-// fetch 超时封装
-function fetchWithTimeout(url, opt, ms) {
-  return new Promise(function(resolve, reject) {
-    var t = setTimeout(function(){reject(new Error('timeout'));}, ms||10000);
-    fetch(url, opt).then(function(r){clearTimeout(t);resolve(r);},function(e){clearTimeout(t);reject(e);});
-  });
+// === 同步函数（通过 Vercel API）===
+const API_URL = 'https://class-manager-omega.vercel.app';
+const API_KEY = 'class2025';
+
+function setSyncStatus(state) {
+  if(!document.getElementById('syncDot')||!document.getElementById('syncText'))return;
+  if(state==='connected'){document.getElementById('syncDot').style.background='var(--green)';document.getElementById('syncText').textContent='已同步';}
+  else if(state==='syncing'){document.getElementById('syncDot').style.background='var(--orange)';document.getElementById('syncText').textContent='同步中…';}
+  else{document.getElementById('syncDot').style.background='var(--text4)';document.getElementById('syncText').textContent='未连接';}
 }
 
+function syncPayload(){return JSON.stringify({stu:stuArr,score:scoreArr,at:atArr,pu:puArr,log:logArr,tutor:tutorArr});}
+
 async function syncUpload() {
-  setSyncStatus("syncing");
-  try{var p=JSON.parse(getSyncPayload());var h={"apikey":"sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd","Authorization":"Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd","Content-Type":"application/json"};
-  var ex=await fetch("https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?select=id&id=eq.class2025",{method:"GET",headers:h});
-  var x=await ex.json();
-  if(x&&x.length>0){await fetch("https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?id=eq.class2025",{method:"PATCH",headers:{"apikey":"sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd","Authorization":"Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd","Content-Type":"application/json","Prefer":"resolution=merge-duplicates"},body:JSON.stringify({data:p,updated_at:new Date().toISOString()})});}
-  else{await fetch("https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data",{method:"POST",headers:h,body:JSON.stringify({id:"class2025",data:p,updated_at:new Date().toISOString()})});}
-  lastSyncData=getSyncPayload();setSyncStatus("connected");}catch(e){setSyncStatus("disconnected");}}
+  setSyncStatus('syncing');
+  try {
+    var r=await fetch(API_URL+'/api/data?key='+API_KEY,{method:'PUT',headers:{'Content-Type':'application/json'},body:syncPayload()});
+    if(r.ok){lastSyncData=syncPayload();setSyncStatus('connected');}else{setSyncStatus('disconnected');}
+  }catch(e){setSyncStatus('disconnected');}
+}
+
 async function syncDownload() {
-  setSyncStatus("syncing");
-  try{var h={"apikey":"sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd","Authorization":"Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd"};
-  var r=await fetch("https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?select=data&id=eq.class2025",{method:"GET",headers:h});
-  var d=await r.json();
-  if(d&&d.length>0&&d[0].data){var da=d[0].data;
-  if(da.stu&&da.stu.length>stuArr.length){stuArr=da.stu;localStorage.setItem(KEY_STU,JSON.stringify(da.stu));}
-  if(da.score&&da.score.length>scoreArr.length){scoreArr=da.score;localStorage.setItem(KEY_SCORE,JSON.stringify(da.score));}
-  if(da.at&&da.at.length>0){atArr=da.at;localStorage.setItem(KEY_AT,JSON.stringify(da.at));}
-  if(da.pu&&da.pu.length>0){puArr=da.pu;localStorage.setItem(KEY_PU,JSON.stringify(da.pu));}
-  if(da.log&&da.log.length>0){logArr=da.log;localStorage.setItem(KEY_LOG,JSON.stringify(da.log));}
-  if(da.tutor&&da.tutor.length>0){tutorArr=da.tutor;localStorage.setItem(KEY_TUTOR,JSON.stringify(da.tutor));}
-  lastSyncData=getSyncPayload();setSyncStatus("connected");refreshAll();return true;}}catch(e){}
-  setSyncStatus("disconnected");return false;}
+  setSyncStatus('syncing');
+  try {
+    var r=await fetch(API_URL+'/api/data?key='+API_KEY);
+    if(!r.ok){setSyncStatus('disconnected');return false;}
+    var data=await r.json();
+    if(!data||data.empty){setSyncStatus('connected');return false;}
+    if(data.stu&&data.stu.length>stuArr.length){stuArr=data.stu;localStorage.setItem(KEY_STU,JSON.stringify(data.stu));}
+    if(data.score&&data.score.length>scoreArr.length){scoreArr=data.score;localStorage.setItem(KEY_SCORE,JSON.stringify(data.score));}
+    if(data.at&&data.at.length>0){atArr=data.at;localStorage.setItem(KEY_AT,JSON.stringify(data.at));}
+    if(data.pu&&data.pu.length>0){puArr=data.pu;localStorage.setItem(KEY_PU,JSON.stringify(data.pu));}
+    if(data.log&&data.log.length>0){logArr=data.log;localStorage.setItem(KEY_LOG,JSON.stringify(data.log));}
+    if(data.tutor&&data.tutor.length>0){tutorArr=data.tutor;localStorage.setItem(KEY_TUTOR,JSON.stringify(data.tutor));}
+    lastSyncData=syncPayload();setSyncStatus('connected');refreshAll();return true;
+  }catch(e){setSyncStatus('disconnected');return false;}
+}
 
 async function syncTest() {
-  setSyncStatus("syncing");
-  try {
-    var r=await fetch("https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?select=id&id=eq.pingtest",{method:"GET",headers:{"apikey":"sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd","Authorization":"Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd"}});
-    if (r.ok) { setSyncStatus("connected"); alert("✅ 连接成功！"); return; }
-  } catch(e) {}
-  setSyncStatus("disconnected");alert("❌ 无法连接到服务器");
+  setSyncStatus('syncing');
+  try{var r=await fetch(API_URL+'/api/health');if(r.ok){setSyncStatus('connected');alert('连接成功！');return;}}catch(e){}
+  setSyncStatus('disconnected');alert('无法连接服务器');
 }
 
 function startSyncPolling() {
-  if (syncInterval) clearInterval(syncInterval);
-  syncInterval = setInterval(async () => {
-    try{await syncDownload();}catch(e){}
-  }, 5000);
+  if(syncInterval)clearInterval(syncInterval);
+  syncInterval=setInterval(function(){syncDownload().catch(function(){});},5000);
 }
-
 
 const KEY_STU="stuData",KEY_SCORE="scoreData",KEY_AT="attendData",KEY_PU="punishData",KEY_LOG="logData",KEY_TUTOR="tutorData";
 const initStuData=[
@@ -820,6 +807,8 @@ function importTutorData(){
   </script>
   </body>
   </html>
+
+
 
 
 
