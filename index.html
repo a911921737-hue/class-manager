@@ -644,7 +644,7 @@ function closeAllModal(){document.querySelectorAll(".modal").forEach(m=>m.style.
 document.querySelectorAll(".modal").forEach(m=>{m.addEventListener("click",e=>{if(e.target===m)closeAllModal();});});
 // 小屏下点击侧边栏菜单自动关闭侧边栏，改善交互
 document.querySelectorAll('.menu-item').forEach(mi=>{mi.addEventListener('click',()=>{ if(window.innerWidth<=960) toggleSidebar(false); });});
-function initExamSelector(){const s=document.getElementById("sc_exam_selector");if(s.options.length>0)return;[...new Set(scoreArr.map(x=>x.exam))].forEach(n=>{const o=document.createElement("option");o.value=n;o.textContent=n;s.appendChild(o);});if(s.options.length)s.value=s.options[0].value;}
+function initExamSelector(){const s=document.getElementById("sc_exam_selector");s.innerHTML="";[...new Set(scoreArr.map(x=>x.exam))].forEach(n=>{const o=document.createElement("option");o.value=n;o.textContent=n;s.appendChild(o);});if(s.options.length)s.value=s.options[0].value;}
 function switchExam(){refreshAll();}
 function addExam(){const n=prompt("输入新考试名称：");if(!n)return;const s=document.getElementById("sc_exam_selector"),o=document.createElement("option");o.value=n;o.textContent=n;s.appendChild(o);s.value=n;}
 function openStuModal(){document.getElementById("stuModal").style.display="flex";["s_name","s_sex","s_idCard","s_tel","s_tel2","s_address"].forEach(id=>document.getElementById(id).value="");}
@@ -762,12 +762,13 @@ function importTutorData(){
   alert("✅ 成功导入 46 条导师关系数据，并自动同步了 "+cnt+" 个电话到学生档案！");
 }
 
-  window.onload=function(){try{
-  // 如果已有导师数据但学生缺电话2，自动同步一次
+  window.onload=async function(){try{
+  // 先等云端数据拉取完成
   if(tutorArr&&tutorArr.length>0&&stuArr.length>0&&!stuArr[0].tel2){
     let c=0;stuArr.forEach(s=>{const t=tutorArr.find(x=>x.name===s.name);if(t){if(t.tel1){s.tel=t.tel1;c++;}if(t.tel2){s.tel2=t.tel2;c++;}}});localStorage.setItem(KEY_STU,JSON.stringify(stuArr));
   }
-  refreshAll()}catch(e){console.error(e)}switchPage("home");document.getElementById("nowTime").textContent=new Date().toLocaleString('zh-CN');loadSyncConfig();startSyncPolling();syncDownload();};
+  loadSyncConfig();startSyncPolling();await syncDownload();
+  refreshAll()}catch(e){console.error(e)}switchPage("home");document.getElementById("nowTime").textContent=new Date().toLocaleString('zh-CN');};
   </script>
   <script>
   function toggleSidebar(show){
