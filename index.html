@@ -587,19 +587,15 @@ async function syncDownload() {
     var r=await fetch(API_URL+'/api/data?key='+API_KEY);
     if(!r.ok){setSyncStatus('disconnected');return false;}
     var data=await r.json();
-    if(!data||data.empty){setSyncStatus('connected');return false;}
-    if(!data.stu)return false;
-    // 比较云端数据与本地是否一致（用于优化，减少不必要刷新）
-    var cur=syncPayload();
-    // 学生数据不同或有其他数据存在 → 同步
-    if(JSON.stringify(data)===cur){setSyncStatus('connected');return false;}
+    if(!data||!data.stu){setSyncStatus('connected');return false;}
+    // 云端有数据就直接覆盖本地（确保实时同步）
     stuArr=data.stu;localStorage.setItem(KEY_STU,JSON.stringify(data.stu));
     scoreArr=data.score||[];localStorage.setItem(KEY_SCORE,JSON.stringify(data.score||[]));
     atArr=data.at||[];localStorage.setItem(KEY_AT,JSON.stringify(data.at||[]));
     puArr=data.pu||[];localStorage.setItem(KEY_PU,JSON.stringify(data.pu||[]));
     logArr=data.log||[];localStorage.setItem(KEY_LOG,JSON.stringify(data.log||[]));
     tutorArr=data.tutor||[];localStorage.setItem(KEY_TUTOR,JSON.stringify(data.tutor||[]));
-    lastSyncData=cur;setSyncStatus('connected');refreshAll();return true;
+    setSyncStatus('connected');refreshAll();return true;
   }catch(e){setSyncStatus('disconnected');return false;}
 }
 
