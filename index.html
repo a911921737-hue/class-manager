@@ -628,6 +628,55 @@ const initScoreData=[
 ];
 if(localStorage.getItem('stuData_v')!=='v3'){localStorage.removeItem(KEY_STU);localStorage.setItem('stuData_v','v3');}
 if(localStorage.getItem('scoreData_v')!=='v1'){localStorage.setItem(KEY_SCORE,JSON.stringify(initScoreData));localStorage.setItem('scoreData_v','v1');}
+// 自动添加2026上学期期末考数据
+(function(){if(localStorage.getItem('final_v1')==='done')return;
+var old=JSON.parse(localStorage.getItem(KEY_SCORE))||[];
+old=old.filter(function(x){return x.exam!=="2026上学期期末考";});
+var finalData=[
+  {exam:'2026上学期期末考',name:'王宇轩',yw:88,sx:61.5,yy:69.5,ls:76,zz:61,dl:52,total:408},
+  {exam:'2026上学期期末考',name:'王安冉',yw:97.5,sx:16.5,yy:47,ls:72,zz:33,dl:44,total:310},
+  {exam:'2026上学期期末考',name:'王苏豪',yw:94.5,sx:86,yy:97,ls:82,zz:51.5,dl:44,total:455},
+  {exam:'2026上学期期末考',name:'王欣欣',yw:96,sx:74.5,yy:104,ls:73.5,zz:62,dl:55,total:465},
+  {exam:'2026上学期期末考',name:'包智翔',yw:97.5,sx:69.5,yy:46,ls:65,zz:68,dl:53,total:399},
+  {exam:'2026上学期期末考',name:'吕凯文',yw:101,sx:38.5,yy:70,ls:72.5,zz:49,dl:62,total:393},
+  {exam:'2026上学期期末考',name:'吕洲',yw:91,sx:64,yy:103.5,ls:75,zz:50,dl:54,total:437.5},
+  {exam:'2026上学期期末考',name:'吕煜蕾',yw:89.5,sx:54,yy:110,ls:66,zz:45,dl:54,total:418.5},
+  {exam:'2026上学期期末考',name:'朱宏文',yw:96.5,sx:54,yy:97.5,ls:71,zz:38,dl:43,total:400},
+  {exam:'2026上学期期末考',name:'朱嘉仪',yw:98,sx:69,yy:109.5,ls:86,zz:62,dl:52,total:476.5},
+  {exam:'2026上学期期末考',name:'任佳艳',yw:95.5,sx:69.5,yy:85,ls:61,zz:51,dl:50,total:412},
+  {exam:'2026上学期期末考',name:'刘雨昊',yw:103.5,sx:64,yy:87.5,ls:75,zz:58,dl:59,total:447},
+  {exam:'2026上学期期末考',name:'许子言',yw:95,sx:51,yy:61,ls:66,zz:23,dl:33,total:329},
+  {exam:'2026上学期期末考',name:'纪吴仪',yw:89,sx:44,yy:130,ls:51,zz:55.5,dl:52,total:421.5},
+  {exam:'2026上学期期末考',name:'严雨萱',yw:104.25,sx:38,yy:117,ls:78,zz:71,dl:59,total:467.25},
+  {exam:'2026上学期期末考',name:'李紫涵',yw:94.5,sx:44,yy:69,ls:52,zz:42,dl:40,total:341.5},
+  {exam:'2026上学期期末考',name:'吴子晗',yw:100,sx:34.5,yy:123,ls:67,zz:59.5,dl:52,total:436},
+  {exam:'2026上学期期末考',name:'邱守诺',yw:94,sx:41,yy:44.5,ls:69.5,zz:52,dl:52,total:353},
+  {exam:'2026上学期期末考',name:'张启阳',yw:105.5,sx:63.5,yy:95,ls:87,zz:69.5,dl:68,total:488.5},
+  {exam:'2026上学期期末考',name:'张俣航',yw:99.5,sx:70,yy:113,ls:75.5,zz:49,dl:35,total:442},
+  {exam:'2026上学期期末考',name:'张铭泽',yw:95.5,sx:23.5,yy:102,ls:60,zz:53,dl:43,total:377},
+  {exam:'2026上学期期末考',name:'陈亦可',yw:106,sx:95.5,yy:91,ls:78,zz:58,dl:56,total:484.5},
+  {exam:'2026上学期期末考',name:'陈际舟',yw:89,sx:76,yy:83.5,ls:73,zz:63,dl:35,total:419.5},
+  {exam:'2026上学期期末考',name:'陈瑞可',yw:96,sx:50.5,yy:129,ls:71,zz:62,dl:50,total:458.5},
+  {exam:'2026上学期期末考',name:'赵丝格',yw:106,sx:61,yy:104,ls:72.5,zz:54.5,dl:59,total:457},
+  {exam:'2026上学期期末考',name:'胡佳馨',yw:89.5,sx:43,yy:111,ls:56,zz:53,dl:44,total:396.5},
+  {exam:'2026上学期期末考',name:'袁雨霏',yw:93,sx:72,yy:111.5,ls:64,zz:59,dl:50,total:449.5},
+  {exam:'2026上学期期末考',name:'徐文萱',yw:111,sx:52,yy:97,ls:77,zz:52,dl:46,total:435},
+  {exam:'2026上学期期末考',name:'郭玥橦',yw:98.5,sx:59.5,yy:104.5,ls:68,zz:49,dl:50,total:429.5},
+  {exam:'2026上学期期末考',name:'黄子涵',yw:103,sx:75.5,yy:113,ls:67,zz:48,dl:48,total:454.5},
+  {exam:'2026上学期期末考',name:'曹秋瑾',yw:107.5,sx:61.5,yy:113,ls:79,zz:57,dl:49,total:467},
+  {exam:'2026上学期期末考',name:'章何弈',yw:94,sx:47,yy:67.5,ls:76,zz:58,dl:47,total:389.5},
+  {exam:'2026上学期期末考',name:'葛立文',yw:95,sx:88.5,yy:94.5,ls:74,zz:56.5,dl:63,total:471.5},
+  {exam:'2026上学期期末考',name:'韩珂馨',yw:88,sx:77.5,yy:121,ls:71.5,zz:52,dl:60,total:470},
+  {exam:'2026上学期期末考',name:'韩寅',yw:92.5,sx:61.5,yy:102.5,ls:51,zz:38,dl:35,total:380.5},
+  {exam:'2026上学期期末考',name:'焦子萱',yw:96.5,sx:24,yy:110.5,ls:71,zz:55.5,dl:45,total:402.5},
+  {exam:'2026上学期期末考',name:'路永延',yw:102,sx:61.5,yy:106,ls:74.5,zz:49,dl:56,total:449},
+  {exam:'2026上学期期末考',name:'雍涵茜',yw:103.5,sx:44.5,yy:90,ls:65,zz:50.5,dl:63,total:416.5},
+  {exam:'2026上学期期末考',name:'管欣然',yw:102.5,sx:38,yy:96,ls:70,zz:42,dl:42,total:390.5},
+  {exam:'2026上学期期末考',name:'滕欣然',yw:91.5,sx:75.5,yy:79.5,ls:82,zz:60,dl:50,total:438.5},
+  {exam:'2026上学期期末考',name:'潘智宸',yw:85.5,sx:17,yy:88,ls:81,zz:31,dl:40,total:342.5}
+];
+finalData.forEach(function(d){old.push(d);});
+localStorage.setItem(KEY_SCORE,JSON.stringify(old));localStorage.setItem('final_v1','done');})();
 if(!localStorage.getItem(KEY_STU))localStorage.setItem(KEY_STU,JSON.stringify(initStuData));
 let stuArr=JSON.parse(localStorage.getItem(KEY_STU))||initStuData;
 let scoreArr=JSON.parse(localStorage.getItem(KEY_SCORE))||initScoreData;
