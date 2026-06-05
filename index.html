@@ -238,6 +238,7 @@ textarea.form-input { resize: vertical; min-height: 100px; line-height: 1.6; }
   .empty-state { padding: 24px 12px; font-size: 12px; }
   .exam-preview { font-size: 12px; }
   .exam-top3 { font-size: 10px; gap: 8px; }
+  td[style*="monospace"] { font-size: 10px !important; letter-spacing: 0.1px !important; }
 }
 </style>
 </head>
@@ -815,13 +816,19 @@ function importTutorData(){
   alert("✅ 成功导入 46 条导师关系数据，并自动同步了 "+cnt+" 个电话到学生档案！");
 }
 
-  window.onload=async function(){try{
-  // 先等云端数据拉取完成
-  if(tutorArr&&tutorArr.length>0&&stuArr.length>0&&!stuArr[0].tel2){
-    let c=0;stuArr.forEach(s=>{const t=tutorArr.find(x=>x.name===s.name);if(t){if(t.tel1){s.tel=t.tel1;c++;}if(t.tel2){s.tel2=t.tel2;c++;}}});localStorage.setItem(KEY_STU,JSON.stringify(stuArr));
-  }
-  loadSyncConfig();startSyncPolling();await syncDownload();ensureLocalScores();
-  refreshAll()}catch(e){console.error(e)}switchPage("home");document.getElementById("nowTime").textContent=new Date().toLocaleString('zh-CN');};
+  window.onload=function(){
+  // 立即渲染页面，不要等同步
+  try{
+    if(tutorArr&&tutorArr.length>0&&stuArr.length>0&&!stuArr[0].tel2){
+      let c=0;stuArr.forEach(function(s){var t=tutorArr.find(function(x){return x.name===s.name;});if(t){if(t.tel1){s.tel=t.tel1;c++;}if(t.tel2){s.tel2=t.tel2;c++;}}});localStorage.setItem(KEY_STU,JSON.stringify(stuArr));
+    }
+  }catch(e){}
+  try{refreshAll()}catch(e){}
+  switchPage("home");document.getElementById("nowTime").textContent=new Date().toLocaleString('zh-CN');
+  // 同步操作不阻塞页面渲染
+  loadSyncConfig();startSyncPolling();
+  setTimeout(function(){syncDownload().then(function(){ensureLocalScores();refreshAll();}).catch(function(){});},100);
+  };
   </script>
   <script>
   function toggleSidebar(show){
