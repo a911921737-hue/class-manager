@@ -298,7 +298,7 @@ textarea.form-input { resize: vertical; min-height: 100px; line-height: 1.6; }
         <div class="section-header">
           <div class="section-title">📈 个人成绩趋势</div>
           <div class="btn-group">
-            <select class="form-input" id="trendStudent" style="width:auto;min-width:120px;padding:7px 12px"></select>
+            <select class="form-input" id="trendStudent" style="width:auto;min-width:120px;padding:7px 12px" onchange="renderTrend()"></select>
           </div>
         </div>
         <div class="section-body">
@@ -688,14 +688,14 @@ function searchSc(){const k=document.getElementById("scSearch").value.trim(),e=d
 let trendChartInstance=null;
 function initTrendStudent(){
   const sel=document.getElementById("trendStudent");if(!sel)return;
-  const cur=sel.value;sel.innerHTML='<option value="">请选择学生</option>';
+  const cur=sel.value;
+  if(sel.options.length>1)return;
   stuArr.forEach(function(s){var o=document.createElement("option");o.value=s.name;o.textContent=s.name;sel.appendChild(o);});
-  if(cur)sel.value=cur;
 }
 function renderTrend(){
   const name=document.getElementById("trendStudent").value;if(!name){if(trendChartInstance){trendChartInstance.destroy();trendChartInstance=null;}return;}
-  const exams=[...new Set(scoreArr.map(x=>x.exam))].sort();
-  const scores=exams.map(function(e){return scoreArr.find(function(x){return x.name===name&&x.exam===e;})}).filter(Boolean);
+  const exams=[...new Set(scoreArr.map(function(x){return x.exam;}))].sort();
+  const scores=exams.map(function(e){return scoreArr.find(function(x){return x.name===name&&x.exam===e;});}).filter(Boolean);
   if(!scores.length){if(trendChartInstance){trendChartInstance.destroy();trendChartInstance=null;}return;}
   const ctx=document.getElementById("trendChart");if(!ctx)return;
   if(trendChartInstance)trendChartInstance.destroy();
@@ -704,20 +704,18 @@ function renderTrend(){
     data:{
       labels:scores.map(function(s){return s.exam.replace(/^(\d{4})/,'$1\n');}),
       datasets:[
-        {label:'语文',data:scores.map(function(s){return s.yw;}),borderColor:'#E74C3C',backgroundColor:'rgba(231,76,60,0.1)',tension:0.3,fill:false,pointRadius:4},
-        {label:'数学',data:scores.map(function(s){return s.sx;}),borderColor:'#2980B9',backgroundColor:'rgba(41,128,185,0.1)',tension:0.3,fill:false,pointRadius:4},
-        {label:'英语',data:scores.map(function(s){return s.yy;}),borderColor:'#27AE60',backgroundColor:'rgba(39,174,96,0.1)',tension:0.3,fill:false,pointRadius:4},
-        {label:'总分',data:scores.map(function(s){return s.total;}),borderColor:'#8E44AD',backgroundColor:'rgba(142,68,173,0.1)',tension:0.3,borderDash:[5,5],fill:false,pointRadius:4},
+        {label:'语文',data:scores.map(function(s){return s.yw;}),borderColor:'#E74C3C',tension:0.3,fill:false,pointRadius:4},
+        {label:'数学',data:scores.map(function(s){return s.sx;}),borderColor:'#2980B9',tension:0.3,fill:false,pointRadius:4},
+        {label:'英语',data:scores.map(function(s){return s.yy;}),borderColor:'#27AE60',tension:0.3,fill:false,pointRadius:4},
+        {label:'总分',data:scores.map(function(s){return s.total;}),borderColor:'#8E44AD',tension:0.3,borderDash:[5,5],fill:false,pointRadius:4}
       ]
     },
-    options:{
-      responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{position:'top',labels:{font:{size:11,weight:'bold'},boxWidth:15,padding:10}}},
-      scales:{y:{beginAtZero:true,title:{display:true,text:'分数'},grid:{color:'rgba(0,0,0,0.06)'}}}
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top'}},
+      scales:{y:{beginAtZero:true,title:{display:true,text:'分数'}}}
     }
   });
 }
-document.addEventListener('change',function(e){if(e.target.id==='trendStudent')renderTrend();});
 function openAtModal(){document.getElementById("atModal").style.display="flex";const d=new Date().toISOString().split("T")[0];document.getElementById("at_date").value=d;document.getElementById("at_date_picker").value=d;document.getElementById("at_name").value="";document.getElementById("at_idCard").value="";document.getElementById("at_st").value="出勤";document.getElementById("at_rmk").value="";atEditIdx=null;}
 function saveAt(){const d={date:document.getElementById("at_date").value,name:document.getElementById("at_name").value.trim(),idCard:document.getElementById("at_idCard").value.trim(),status:document.getElementById("at_st").value,remark:document.getElementById("at_rmk").value.trim()};if(!d.date||!d.name)return alert("日期和姓名不能为空");if(atEditIdx!==null)atArr[atEditIdx]=d;else atArr.push(d);localStorage.setItem(KEY_AT,JSON.stringify(atArr));closeAllModal();refreshAll();syncUpload();}
 function loadDailyAt(){let d=document.getElementById("at_date_picker").value;if(!d)d=new Date().toISOString().split("T")[0];document.getElementById("at_date_picker").value=d;document.getElementById("atDailyTable").innerHTML=stuArr.map(s=>{const at=atArr.find(x=>x.idCard===s.idCard&&x.date===d);return `<tr><td><strong>${s.name}</strong></td><td>${s.sex?`<span class="badge ${s.sex==='男'?'badge-blue':'badge-orange'}">${s.sex}</span>`:"-"}</td><td style="font-family:'SF Mono',Menlo,monospace;font-size:13px">${s.idCard}</td><td><select class="form-input at-status" data-idcard="${s.idCard}" style="width:120px;padding:6px 10px"><option value="">—</option><option value="出勤" ${at?.status==="出勤"?"selected":""}>出勤</option><option value="请假" ${at?.status==="请假"?"selected":""}>请假</option><option value="缺勤" ${at?.status==="缺勤"?"selected":""}>缺勤</option></select></td><td><input class="form-input at-remark" data-idcard="${s.idCard}" value="${at?.remark||""}" style="padding:6px 10px"></td></tr>`;}).join("");renderAt();}
