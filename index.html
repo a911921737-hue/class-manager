@@ -654,7 +654,7 @@ function closeAllModal(){document.querySelectorAll(".modal").forEach(m=>m.style.
 document.querySelectorAll(".modal").forEach(m=>{m.addEventListener("click",e=>{if(e.target===m)closeAllModal();});});
 // 小屏下点击侧边栏菜单自动关闭侧边栏，改善交互
 document.querySelectorAll('.menu-item').forEach(mi=>{mi.addEventListener('click',()=>{ if(window.innerWidth<=960) toggleSidebar(false); });});
-function initExamSelector(){const s=document.getElementById("sc_exam_selector");s.innerHTML="";[...new Set(scoreArr.map(x=>x.exam))].forEach(n=>{const o=document.createElement("option");o.value=n;o.textContent=n;s.appendChild(o);});if(s.options.length)s.value=s.options[0].value;}
+function initExamSelector(){const s=document.getElementById("sc_exam_selector");const cur=s.value;const exams=[...new Set(scoreArr.map(x=>x.exam))];exams.forEach(n=>{let found=false;for(let i=0;i<s.options.length;i++){if(s.options[i].value===n){found=true;break;}}if(!found){const o=document.createElement("option");o.value=n;o.textContent=n;s.appendChild(o);}});if(s.options.length&&!cur)s.value=s.options[0].value;}
 function switchExam(){refreshAll();}
 function addExam(){const n=prompt("输入新考试名称：");if(!n)return;const s=document.getElementById("sc_exam_selector"),o=document.createElement("option");o.value=n;o.textContent=n;s.appendChild(o);s.value=n;}
 function openStuModal(){document.getElementById("stuModal").style.display="flex";["s_name","s_sex","s_idCard","s_tel","s_tel2","s_address"].forEach(id=>document.getElementById(id).value="");}
