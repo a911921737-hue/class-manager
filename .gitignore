@@ -1,0 +1,8 @@
+node_modules/
+server/data.json
+*.exe
+*.zip
+.env
+check_header.txt
+pland.md
+.reasonix/
