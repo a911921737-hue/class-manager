@@ -266,11 +266,14 @@ textarea.form-input { resize: vertical; min-height: 100px; line-height: 1.6; }
       <div class="section">
         <div class="section-header">
           <div class="section-title">学生信息</div>
-          <button class="btn btn-primary" onclick="openStuModal()">新增学生</button>
+          <div class="btn-group">
+            <button class="btn btn-primary" onclick="openStuModal()">新增学生</button>
+            <button class="btn btn-success" onclick="importPhoneFromTutor()">导入导师电话</button>
+          </div>
         </div>
         <div class="section-body">
           <div class="search-bar"><input class="search-input" id="stuSearch" placeholder="姓名 / 身份证号 / 电话 / 住址"><button class="btn btn-success" onclick="searchStu()">搜索</button></div>
-          <div class="table-wrap"><table><thead><tr><th>姓名</th><th>性别</th><th>身份证号</th><th>家长电话</th><th>家庭住址</th><th>操作</th></tr></thead><tbody id="stuTable"></tbody></table></div>
+          <div class="table-wrap"><table><thead><tr><th>姓名</th><th>性别</th><th>身份证号</th><th>家长电话1</th><th>家长电话2</th><th>家庭住址</th><th>操作</th></tr></thead><tbody id="stuTable"></tbody></table></div>
         </div>
       </div>
     </div>
@@ -397,7 +400,8 @@ textarea.form-input { resize: vertical; min-height: 100px; line-height: 1.6; }
     <div class="form-item"><label>姓名 *</label><input class="form-input" id="s_name"></div>
     <div class="form-item"><label>性别</label><input class="form-input" id="s_sex" placeholder="男 / 女"></div>
     <div class="form-item"><label>身份证号 *</label><input class="form-input" id="s_idCard" maxlength="18" placeholder="18 位身份证号"></div>
-    <div class="form-item"><label>家长电话</label><input class="form-input" id="s_tel" placeholder="手机号码"></div>
+    <div class="form-item"><label>家长电话1</label><input class="form-input" id="s_tel" placeholder="手机号码"></div>
+    <div class="form-item"><label>家长电话2</label><input class="form-input" id="s_tel2" placeholder="手机号码"></div>
     <div class="form-item"><label>家庭住址</label><input class="form-input" id="s_address" placeholder="详细住址"></div>
     <div class="modal-foot"><button class="btn btn-ghost" onclick="closeAllModal()">取消</button><button class="btn btn-primary" onclick="saveStu()">保存</button></div>
   </div>
@@ -643,12 +647,12 @@ document.querySelectorAll('.menu-item').forEach(mi=>{mi.addEventListener('click'
 function initExamSelector(){const s=document.getElementById("sc_exam_selector");if(s.options.length>0)return;[...new Set(scoreArr.map(x=>x.exam))].forEach(n=>{const o=document.createElement("option");o.value=n;o.textContent=n;s.appendChild(o);});if(s.options.length)s.value=s.options[0].value;}
 function switchExam(){refreshAll();}
 function addExam(){const n=prompt("输入新考试名称：");if(!n)return;const s=document.getElementById("sc_exam_selector"),o=document.createElement("option");o.value=n;o.textContent=n;s.appendChild(o);s.value=n;}
-function openStuModal(){document.getElementById("stuModal").style.display="flex";["s_name","s_sex","s_idCard","s_tel","s_address"].forEach(id=>document.getElementById(id).value="");}
-function saveStu(){const d={name:document.getElementById("s_name").value.trim(),sex:document.getElementById("s_sex").value.trim(),idCard:document.getElementById("s_idCard").value.trim(),tel:document.getElementById("s_tel").value.trim(),address:document.getElementById("s_address").value.trim()};if(!d.idCard||!d.name)return alert("姓名和身份证号不能为空");if(d.idCard.length!==18)return alert("身份证号必须为18位");const idx=stuArr.findIndex(x=>x.idCard===d.idCard);if(idx>=0){if(!confirm(`学生「${d.name}」已存在，是否覆盖？`))return;stuArr[idx]=d;}else stuArr.push(d);localStorage.setItem(KEY_STU,JSON.stringify(stuArr));closeAllModal();refreshAll();syncUpload();}
-function renderStu(list){const arr=list||stuArr;document.getElementById("stuTable").innerHTML=arr.map(s=>`<tr><td><strong>${s.name}</strong></td><td>${s.sex?`<span class="badge ${s.sex==='男'?'badge-blue':'badge-orange'}">${s.sex}</span>`:"-"}</td><td style="font-family:'SF Mono',Menlo,monospace;font-size:13px;letter-spacing:0.3px">${s.idCard}</td><td>${s.tel||"-"}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">${s.address||"-"}</td><td><button class="btn btn-ghost" onclick="editStu('${s.idCard}')" style="padding:3px 12px;font-size:12px">修改</button><button class="btn btn-danger" onclick="delStu('${s.idCard}')" style="padding:3px 12px;font-size:12px">删除</button></td></tr>`).join("")||'<tr><td colspan="6"><div class="empty-state">暂无学生数据</div></td></tr>';}
-function editStu(id){const s=stuArr.find(x=>x.idCard===id);if(!s)return;document.getElementById("s_name").value=s.name;document.getElementById("s_sex").value=s.sex||"";document.getElementById("s_idCard").value=s.idCard;document.getElementById("s_tel").value=s.tel||"";document.getElementById("s_address").value=s.address||"";document.getElementById("stuModal").style.display="flex";}
+function openStuModal(){document.getElementById("stuModal").style.display="flex";["s_name","s_sex","s_idCard","s_tel","s_tel2","s_address"].forEach(id=>document.getElementById(id).value="");}
+function saveStu(){const d={name:document.getElementById("s_name").value.trim(),sex:document.getElementById("s_sex").value.trim(),idCard:document.getElementById("s_idCard").value.trim(),tel:document.getElementById("s_tel").value.trim(),tel2:document.getElementById("s_tel2").value.trim(),address:document.getElementById("s_address").value.trim()};if(!d.idCard||!d.name)return alert("姓名和身份证号不能为空");if(d.idCard.length!==18)return alert("身份证号必须为18位");const idx=stuArr.findIndex(x=>x.idCard===d.idCard);if(idx>=0){if(!confirm(`学生「${d.name}」已存在，是否覆盖？`))return;stuArr[idx]=d;}else stuArr.push(d);localStorage.setItem(KEY_STU,JSON.stringify(stuArr));closeAllModal();refreshAll();syncUpload();}
+function renderStu(list){const arr=list||stuArr;document.getElementById("stuTable").innerHTML=arr.map(s=>`<tr><td><strong>${s.name}</strong></td><td>${s.sex?`<span class="badge ${s.sex==='男'?'badge-blue':'badge-orange'}">${s.sex}</span>`:"-"}</td><td style="font-family:'SF Mono',Menlo,monospace;font-size:13px;letter-spacing:0.3px">${s.idCard}</td><td>${s.tel||"-"}</td><td>${s.tel2||"-"}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">${s.address||"-"}</td><td><button class="btn btn-ghost" onclick="editStu('${s.idCard}')" style="padding:3px 12px;font-size:12px">修改</button><button class="btn btn-danger" onclick="delStu('${s.idCard}')" style="padding:3px 12px;font-size:12px">删除</button></td></tr>`).join("")||'<tr><td colspan="7"><div class="empty-state">暂无学生数据</div></td></tr>';}
+function editStu(id){const s=stuArr.find(x=>x.idCard===id);if(!s)return;document.getElementById("s_name").value=s.name;document.getElementById("s_sex").value=s.sex||"";document.getElementById("s_idCard").value=s.idCard;document.getElementById("s_tel").value=s.tel||"";document.getElementById("s_tel2").value=s.tel2||"";document.getElementById("s_address").value=s.address||"";document.getElementById("stuModal").style.display="flex";}
 function delStu(id){const s=stuArr.find(x=>x.idCard===id);if(!s||!confirm(`确定删除学生「${s.name}」？`))return;stuArr=stuArr.filter(x=>x.idCard!==id);localStorage.setItem(KEY_STU,JSON.stringify(stuArr));refreshAll();syncUpload();}
-function searchStu(){const k=document.getElementById("stuSearch").value.trim().toLowerCase();renderStu(k?stuArr.filter(s=>s.name.includes(k)||s.idCard.includes(k)||(s.tel&&s.tel.includes(k))||(s.address&&s.address.includes(k))):null);}
+function searchStu(){const k=document.getElementById("stuSearch").value.trim().toLowerCase();renderStu(k?stuArr.filter(s=>s.name.includes(k)||s.idCard.includes(k)||(s.tel&&s.tel.includes(k))||(s.tel2&&s.tel2.includes(k))||(s.address&&s.address.includes(k))):null);}
 function openScModal(){const selMo=document.getElementById("sc_exam"),cur=document.getElementById("sc_exam_selector").value;let f=false;for(let i=0;i<selMo.options.length;i++){if(selMo.options[i].value===cur){selMo.selectedIndex=i;f=true;break;}}if(!f){const o=document.createElement("option");o.value=cur;o.textContent=cur;selMo.appendChild(o);selMo.value=cur;}document.getElementById("scModal").style.display="flex";["sc_name","sc_yw","sc_sx","sc_yy","sc_ls","sc_zz","sc_dl"].forEach(id=>document.getElementById(id).value="");}
 function saveSc(){const exam=document.getElementById("sc_exam").value,name=document.getElementById("sc_name").value.trim();if(!name)return alert("姓名不能为空");const yw=+document.getElementById("sc_yw").value||0,sx=+document.getElementById("sc_sx").value||0,yy=+document.getElementById("sc_yy").value||0,ls=+document.getElementById("sc_ls").value||0,zz=+document.getElementById("sc_zz").value||0,dl=+document.getElementById("sc_dl").value||0,total=yw+sx+yy+ls+zz+dl;const idx=scoreArr.findIndex(x=>x.exam===exam&&x.name===name);if(idx>=0)scoreArr[idx]={exam,name,idCard:scoreArr[idx].idCard,yw,sx,yy,ls,zz,dl,total};else{const stu=stuArr.find(x=>x.name===name);scoreArr.push({exam,name,idCard:stu?stu.idCard:"",yw,sx,yy,ls,zz,dl,total});}localStorage.setItem(KEY_SCORE,JSON.stringify(scoreArr));closeAllModal();refreshAll();syncUpload();}
 function renderSc(list){const exam=document.getElementById("sc_exam_selector").value,arr=(list||scoreArr.filter(x=>x.exam===exam)).sort((a,b)=>b.total-a.total);document.getElementById("scTable").innerHTML=arr.map((s,i)=>{const r=`<span style="color:var(--text3)">${i+1}</span>`;return `<tr><td style="text-align:center">${r}</td><td><strong>${s.name}</strong></td><td>${s.yw}</td><td>${s.sx}</td><td>${s.yy}</td><td>${s.ls}</td><td>${s.zz}</td><td>${s.dl}</td><td style="font-weight:700">${s.total}</td><td><button class="btn btn-ghost" onclick="editSc('${s.name}')" style="padding:3px 12px;font-size:12px">修改</button></td></tr>`;}).join("")||'<tr><td colspan="10"><div class="empty-state">暂无成绩数据</div></td></tr>';}
@@ -686,6 +690,22 @@ function refreshAll(){
 }
 function exportScores(){const exam=document.getElementById("sc_exam_selector").value,s=scoreArr.filter(x=>x.exam===exam).sort((a,b)=>b.total-a.total);if(!s.length)return alert("没有可导出的成绩");let csv="\uFEFF排名,姓名,语文,数学,英语,历史,政治,地理,总分\n";s.forEach((s,i)=>{csv+=(i+1)+","+s.name+","+s.yw+","+s.sx+","+s.yy+","+s.ls+","+s.zz+","+s.dl+","+s.total+"\n";});const b=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=exam+" 成绩.csv";a.click();}
 function clearAllData(){if(!confirm("确定清空全部本地数据？此操作不可恢复！"))return;localStorage.removeItem(KEY_STU);localStorage.removeItem(KEY_SCORE);localStorage.removeItem(KEY_AT);localStorage.removeItem(KEY_PU);localStorage.removeItem(KEY_LOG);localStorage.removeItem(KEY_TUTOR);stuArr=initStuData;scoreArr=initScoreData;atArr=[];puArr=[];logArr=[];tutorArr=[];localStorage.setItem(KEY_STU,JSON.stringify(initStuData));localStorage.setItem(KEY_SCORE,JSON.stringify(initScoreData));refreshAll();syncUpload();}
+
+// 从导师数据导入电话到学生档案（按姓名匹配）
+function importPhoneFromTutor(){
+  if(!tutorArr||tutorArr.length===0)return alert("导师数据为空，请先导入导师数据");
+  let count=0;
+  stuArr.forEach(s=>{
+    const t=tutorArr.find(x=>x.name===s.name);
+    if(t){
+      if(t.tel1){s.tel=t.tel1;count++;}
+      if(t.tel2){s.tel2=t.tel2;count++;}
+    }
+  });
+  localStorage.setItem(KEY_STU,JSON.stringify(stuArr));
+  renderStu();syncUpload();
+  alert("✅ 导入完成！共匹配更新 "+count+" 个电话号码。");
+}
 
 // ===== 导师制函数 =====
 let tutorEditIdx=null;
