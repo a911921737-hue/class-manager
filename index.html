@@ -524,25 +524,20 @@ var upTime=0;
 function sbh(){return {'apikey':'sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Authorization':'Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Content-Type':'application/json'};}
 function ss(s){var d=document.getElementById('syncDot'),t=document.getElementById('syncText');if(!d||!t)return;if(s==='ok'){d.style.background='var(--green)';t.textContent='已同步';}else if(s==='busy'){d.style.background='var(--orange)';t.textContent='同步中…';}else{d.style.background='var(--text4)';t.textContent='未连接';}}
 function ad(){var d={stu:stuArr,score:scoreArr,at:atArr,pu:puArr,log:logArr,tutor:tutorArr};return JSON.stringify(d);}
-async function up(){ss('busy');upTime=Date.now();try{var p=JSON.parse(ad());var ex=await fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?select=id&id=eq.class2025',{headers:sbh()});var x=await ex.json();if(x&&x.length>0){await fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?id=eq.class2025',{method:'PATCH',headers:{'apikey':'sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Authorization':'Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},body:JSON.stringify({data:p,updated_at:new Date().toISOString()})});}else{await fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data',{method:'POST',headers:sbh(),body:JSON.stringify({id:'class2025',data:p,updated_at:new Date().toISOString()})});}ss('ok');}catch(e){ss('ok');}}
+async function up(){ss('busy');localStorage.setItem('_v',(parseInt(localStorage.getItem('_v')||'0')+1)+'');try{var p=JSON.parse(ad());var ex=await fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?select=id&id=eq.class2025',{headers:sbh()});var x=await ex.json();if(x&&x.length>0){await fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?id=eq.class2025',{method:'PATCH',headers:{'apikey':'sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Authorization':'Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},body:JSON.stringify({data:p,updated_at:new Date().toISOString()})});}else{await fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data',{method:'POST',headers:sbh(),body:JSON.stringify({id:'class2025',data:p,updated_at:new Date().toISOString()})});}ss('ok');}catch(e){ss('ok');}}
 async function down(){try{
-if(Date.now()-upTime<4000)return;
-var r=await fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?select=data&id=eq.class2025',{headers:{'apikey':'sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Authorization':'Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd'}});var d=await r.json();if(!d||!d[0]||!d[0].data)return;var dd=d[0].data;
+var r=await fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?select=data&id=eq.class2025',{headers:{'apikey':'sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Authorization':'Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd'}});var d=await r.json();if(!d||!d[0]||!d[0].data)return;var dd=d[0].data;ss('ok');
 if(document.querySelector('.modal[style*="flex"]'))return;
-var ch=0;
-// 只合并云端新记录，不恢复已删除的
-if(dd.pu){dd.pu.forEach(function(cr){
-  if(!puArr.some(function(lr){return lr.date===cr.date&&lr.name===cr.name&&lr.type===cr.type;})&&cr.date>='2026'){puArr.push(cr);ch=1;}
-});}
-if(dd.at){dd.at.forEach(function(cr){
-  if(!atArr.some(function(lr){return lr.date===cr.date&&lr.name===cr.name&&lr.status===cr.status;})&&cr.date>='2026'){atArr.push(cr);ch=1;}
-});}
-if(dd.log){dd.log.forEach(function(cr){
-  if(!logArr.some(function(lr){return lr.date===cr.date&&lr.content===cr.content;})&&cr.date>='2026'){logArr.push(cr);ch=1;}
-});}
-if(ch){localStorage.setItem(KEY_PU,JSON.stringify(puArr));localStorage.setItem(KEY_AT,JSON.stringify(atArr));localStorage.setItem(KEY_LOG,JSON.stringify(logArr));refreshAll();}
-}catch(e){ss('no');}}
-function syncTest(){ss('busy');fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?select=id&id=eq.pingtest',{headers:{'apikey':'sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Authorization':'Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd'}}).then(function(r){if(r.ok){ss('ok');alert('连接成功！');}else{ss('no');alert('无法连接');}}).catch(function(){ss('no');alert('无法连接');});}
+var lv=localStorage.getItem('_v')||'0';
+var cv=(dd._v||'0')+'';
+if(cv>lv){
+  puArr=dd.pu||[];localStorage.setItem(KEY_PU,JSON.stringify(puArr));
+  atArr=dd.at||[];localStorage.setItem(KEY_AT,JSON.stringify(atArr));
+  logArr=dd.log||[];localStorage.setItem(KEY_LOG,JSON.stringify(logArr));
+  localStorage.setItem('_v',cv);
+  refreshAll();
+}
+}catch(e){ss('no');}}function syncTest(){ss('busy');fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?select=id&id=eq.pingtest',{headers:{'apikey':'sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Authorization':'Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd'}}).then(function(r){if(r.ok){ss('ok');alert('连接成功！');}else{ss('no');alert('无法连接');}}).catch(function(){ss('no');alert('无法连接');});}
 var syncUpload=up,syncDownload=down;
 function startSync(){clearInterval(syncTimer);down();syncTimer=setInterval(function(){down();},1000);}
 
@@ -802,6 +797,7 @@ function importTutorData(){
   </script>
   </body>
   </html>
+
 
 
 
