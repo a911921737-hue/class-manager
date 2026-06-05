@@ -588,13 +588,18 @@ async function syncDownload() {
     if(!r.ok){setSyncStatus('disconnected');return false;}
     var data=await r.json();
     if(!data||data.empty){setSyncStatus('connected');return false;}
-    if(data.stu&&data.stu.length>stuArr.length){stuArr=data.stu;localStorage.setItem(KEY_STU,JSON.stringify(data.stu));}
-    if(data.score&&data.score.length>scoreArr.length){scoreArr=data.score;localStorage.setItem(KEY_SCORE,JSON.stringify(data.score));}
-    if(data.at&&data.at.length>0){atArr=data.at;localStorage.setItem(KEY_AT,JSON.stringify(data.at));}
-    if(data.pu&&data.pu.length>0){puArr=data.pu;localStorage.setItem(KEY_PU,JSON.stringify(data.pu));}
-    if(data.log&&data.log.length>0){logArr=data.log;localStorage.setItem(KEY_LOG,JSON.stringify(data.log));}
-    if(data.tutor&&data.tutor.length>0){tutorArr=data.tutor;localStorage.setItem(KEY_TUTOR,JSON.stringify(data.tutor));}
-    lastSyncData=syncPayload();setSyncStatus('connected');refreshAll();return true;
+    if(!data.stu)return false;
+    // 比较云端数据与本地是否一致（用于优化，减少不必要刷新）
+    var cur=syncPayload();
+    // 学生数据不同或有其他数据存在 → 同步
+    if(JSON.stringify(data)===cur){setSyncStatus('connected');return false;}
+    stuArr=data.stu;localStorage.setItem(KEY_STU,JSON.stringify(data.stu));
+    scoreArr=data.score||[];localStorage.setItem(KEY_SCORE,JSON.stringify(data.score||[]));
+    atArr=data.at||[];localStorage.setItem(KEY_AT,JSON.stringify(data.at||[]));
+    puArr=data.pu||[];localStorage.setItem(KEY_PU,JSON.stringify(data.pu||[]));
+    logArr=data.log||[];localStorage.setItem(KEY_LOG,JSON.stringify(data.log||[]));
+    tutorArr=data.tutor||[];localStorage.setItem(KEY_TUTOR,JSON.stringify(data.tutor||[]));
+    lastSyncData=cur;setSyncStatus('connected');refreshAll();return true;
   }catch(e){setSyncStatus('disconnected');return false;}
 }
 
