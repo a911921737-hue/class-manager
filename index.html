@@ -740,7 +740,8 @@ function refreshAll(){
   document.getElementById("outNum").textContent=today.length-document.getElementById("inNum").textContent;
   const ep=document.getElementById("examPreview");
   if(ep&&scoreArr.length){
-    const allExams=[...new Set(scoreArr.map(x=>x.exam))].filter(e=>scoreArr.some(x=>x.exam===e&&x.total)).sort();
+    const order=['2026年5月联考','2026期中考试','2026上学期期末考'];
+    const allExams=order.filter(e=>scoreArr.some(x=>x.exam===e&&x.total));
     ep.innerHTML=allExams.map(function(e){
       const s=scoreArr.filter(x=>x.exam===e).sort((a,b)=>b.total-a.total);
       if(!s.length)return '';
