@@ -584,12 +584,10 @@ function fetchWithTimeout(url, opt, ms) {
 
 async function syncUpload() {
   setSyncStatus('syncing');
-  // 先试Supabase直连
-  if (await sbUpload()) { lastSyncData = getSyncPayload(); setSyncStatus('connected'); return; }
-  // 失败则用API
-  const { url, key } = saveSyncConfig();
-  if (!url || !key) { setSyncStatus('disconnected'); return; }
+  try{if(await sbUpload()){lastSyncData=getSyncPayload();setSyncStatus('connected');return;}}catch(e){}
   try {
+    const { url, key } = saveSyncConfig();
+    if (url && key) {
     const payload = getSyncPayload();
     const res = await fetchWithTimeout(url + '/api/data?key=' + encodeURIComponent(key), {
       method: 'PUT',
@@ -601,12 +599,11 @@ async function syncUpload() {
       setSyncStatus('connected');
     } else {
       setSyncStatus('disconnected');
-    }
+    }}
   } catch (e) {
     setSyncStatus('disconnected');
   }
 }
-
 async function syncDownload() {
   setSyncStatus('syncing');
   // 先试Supabase直连
@@ -952,5 +949,6 @@ function importTutorData(){
   </script>
   </body>
   </html>
+
 
 
