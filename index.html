@@ -353,7 +353,7 @@ textarea.form-input { resize: vertical; min-height: 100px; line-height: 1.6; }
         </div>
         <div class="section-body">
           <div class="search-bar"><input class="search-input" id="tutorSearch" placeholder="搜索学生姓名 / 导师姓名"><button class="btn btn-success" onclick="searchTutor()">搜索</button></div>
-          <div class="table-wrap"><table><thead><tr><th>序号</th><th>班级</th><th>学生姓名</th><th>性别</th><th>学生电话1</th><th>学生电话2</th><th>导师姓名</th><th>导师电话</th><th>操作</th></tr></thead><tbody id="tutorTable"></tbody></table></div>
+          <div class="table-wrap"><table><thead><tr><th>序号</th><th>学生姓名</th><th>性别</th><th>学生电话1</th><th>学生电话2</th><th>导师姓名</th><th>导师电话</th><th>操作</th></tr></thead><tbody id="tutorTable"></tbody></table></div>
         </div>
       </div>
     </div>
@@ -708,7 +708,7 @@ function editTutor(idx){
 function delTutor(idx){if(!confirm("确定删除该导师关系？"))return;tutorArr.splice(idx,1);localStorage.setItem(KEY_TUTOR,JSON.stringify(tutorArr));renderTutor();syncUpload();}
 function renderTutor(list){
   const arr=list||tutorArr;
-  document.getElementById("tutorTable").innerHTML=arr.map((s,i)=>`<tr><td>${i+1}</td><td>${s.class||"14"}</td><td><strong>${s.name}</strong></td><td>${s.sex?`<span class="badge ${s.sex==='男'?'badge-blue':'badge-orange'}">${s.sex}</span>`:"-"}</td><td>${s.tel1||"-"}</td><td>${s.tel2||"-"}</td><td><span class="badge badge-green">${s.tutor}</span></td><td>${s.tutorTel||"-"}</td><td><button class="btn btn-ghost" onclick="editTutor(${i})" style="padding:3px 12px;font-size:12px">修改</button><button class="btn btn-danger" onclick="delTutor(${i})" style="padding:3px 12px;font-size:12px">删除</button></td></tr>`).join("")||'<tr><td colspan="9"><div class="empty-state">暂无导师关系数据</div></td></tr>';
+  document.getElementById("tutorTable").innerHTML=arr.map((s,i)=>`<tr><td>${i+1}</td><td><strong>${s.name}</strong></td><td>${s.sex?`<span class="badge ${s.sex==='男'?'badge-blue':'badge-orange'}">${s.sex}</span>`:"-"}</td><td>${s.tel1||"-"}</td><td>${s.tel2||"-"}</td><td><span class="badge badge-green">${s.tutor}</span></td><td>${s.tutorTel||"-"}</td><td><button class="btn btn-ghost" onclick="editTutor(${i})" style="padding:3px 12px;font-size:12px">修改</button><button class="btn btn-danger" onclick="delTutor(${i})" style="padding:3px 12px;font-size:12px">删除</button></td></tr>`).join("")||'<tr><td colspan="8"><div class="empty-state">暂无导师关系数据</div></td></tr>';
 }
 function searchTutor(){
   const k=document.getElementById("tutorSearch").value.trim().toLowerCase();
