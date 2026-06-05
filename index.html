@@ -543,11 +543,11 @@ async function down(){
     var d=await r.json();
     if(!d||!d.stu)return;
     stuArr=d.stu;localStorage.setItem(KEY_STU,JSON.stringify(d.stu));
-    scoreArr=d.score||[];localStorage.setItem(KEY_SCORE,JSON.stringify(d.score||[]));
-    atArr=d.at||[];localStorage.setItem(KEY_AT,JSON.stringify(d.at||[]));
-    puArr=d.pu||[];localStorage.setItem(KEY_PU,JSON.stringify(d.pu||[]));
-    logArr=d.log||[];localStorage.setItem(KEY_LOG,JSON.stringify(d.log||[]));
-    tutorArr=d.tutor||[];localStorage.setItem(KEY_TUTOR,JSON.stringify(d.tutor||[]));
+    if(d.score&&d.score.length>0){scoreArr=d.score;localStorage.setItem(KEY_SCORE,JSON.stringify(d.score));}
+    if(d.at&&d.at.length>0){atArr=d.at;localStorage.setItem(KEY_AT,JSON.stringify(d.at));}
+    if(d.pu&&d.pu.length>0){puArr=d.pu;localStorage.setItem(KEY_PU,JSON.stringify(d.pu));}
+    if(d.log&&d.log.length>0){logArr=d.log;localStorage.setItem(KEY_LOG,JSON.stringify(d.log));}
+    if(d.tutor&&d.tutor.length>0){tutorArr=d.tutor;localStorage.setItem(KEY_TUTOR,JSON.stringify(d.tutor));}
     setSync('ok');refreshAll();
   }catch(e){setSync('no');}
 }
@@ -594,7 +594,58 @@ function ensureLocalScores(){
 let atArr=JSON.parse(localStorage.getItem(KEY_AT))||[];
 let puArr=JSON.parse(localStorage.getItem(KEY_PU))||[];
 let logArr=JSON.parse(localStorage.getItem(KEY_LOG))||[];
+// 导师数据硬编码（打开就有，不需要手动导入）
+const initTutorData=[
+  {name:'吕洲',class:'14',sex:'男',tel1:'13952967259',tel2:'18792697922',tutor:'陈靓',tutorTel:'13295222698'},
+  {name:'吕煜蕾',class:'14',sex:'女',tel1:'15651281970',tel2:'13505299930',tutor:'陈靓',tutorTel:'13295222698'},
+  {name:'朱宏文',class:'14',sex:'男',tel1:'13815162002',tel2:'13775528006',tutor:'陈靓',tutorTel:'13295222698'},
+  {name:'朱嘉仪',class:'14',sex:'女',tel1:'15605283957',tel2:'15952937197',tutor:'陈靓',tutorTel:'13295222698'},
+  {name:'严雨萱',class:'14',sex:'女',tel1:'18952939343',tel2:'13851408949',tutor:'陈靓',tutorTel:'13295222698'},
+  {name:'张俣航',class:'14',sex:'男',tel1:'15722841985',tel2:'13625264266',tutor:'陈靓',tutorTel:'13295222698'},
+  {name:'张梦璇',class:'14',sex:'女',tel1:'15802187615',tel2:'18821263919',tutor:'陈靓',tutorTel:'13295222698'},
+  {name:'赵许琪',class:'14',sex:'女',tel1:'18952996810',tel2:'18952999357',tutor:'陈靓',tutorTel:'13295222698'},
+  {name:'郭玥橦',class:'14',sex:'女',tel1:'13775393612',tel2:'18061190416',tutor:'陈靓',tutorTel:'13295222698'},
+  {name:'黄子涵',class:'14',sex:'女',tel1:'13952991698',tel2:'13505296008',tutor:'陈靓',tutorTel:'13295222698'},
+  {name:'焦子萱',class:'14',sex:'女',tel1:'15189145967',tel2:'13915951240',tutor:'陈靓',tutorTel:'13295222698'},
+  {name:'管欣然',class:'14',sex:'女',tel1:'15996826250',tel2:'13400096880',tutor:'陈靓',tutorTel:'13295222698'},
+  {name:'滕欣然',class:'14',sex:'女',tel1:'13645295694',tel2:'13521553613',tutor:'陈靓',tutorTel:'13295222698'},
+  {name:'王安冉',class:'14',sex:'女',tel1:'18951905061',tel2:'18115895657',tutor:'陈靓',tutorTel:'17368506928'},
+  {name:'吕凯文',class:'14',sex:'男',tel1:'17705298560',tel2:'17705298995',tutor:'笪明扬',tutorTel:'17368506928'},
+  {name:'任佳艳',class:'14',sex:'女',tel1:'18852846081',tel2:'',tutor:'笪明扬',tutorTel:'17368506928'},
+  {name:'刘雨昊',class:'14',sex:'男',tel1:'18952872118',tel2:'13851958837',tutor:'笪明扬',tutorTel:'17368506928'},
+  {name:'许子言',class:'14',sex:'男',tel1:'13357778108',tel2:'',tutor:'笪明扬',tutorTel:'17368506928'},
+  {name:'李紫涵',class:'14',sex:'女',tel1:'15097086920',tel2:'18393308568',tutor:'笪明扬',tutorTel:'17368506928'},
+  {name:'邱守诺',class:'14',sex:'男',tel1:'13921555200',tel2:'13505299451',tutor:'笪明扬',tutorTel:'17368506928'},
+  {name:'张铭泽',class:'14',sex:'男',tel1:'18852883338',tel2:'18914580051',tutor:'笪明扬',tutorTel:'17368506928'},
+  {name:'秦诗涵',class:'14',sex:'女',tel1:'13451963520',tel2:'13505292348',tutor:'笪明扬',tutorTel:'17368506928'},
+  {name:'章何弈',class:'14',sex:'男',tel1:'18252955155',tel2:'',tutor:'笪明扬',tutorTel:'17368506928'},
+  {name:'王欣欣',class:'14',sex:'女',tel1:'13775396790',tel2:'13656108508',tutor:'方忠祥',tutorTel:'15252992307'},
+  {name:'张启阳',class:'14',sex:'男',tel1:'13305299749',tel2:'13062915531',tutor:'方忠祥',tutorTel:'15252992307'},
+  {name:'陈际舟',class:'14',sex:'男',tel1:'13914596203',tel2:'13812360101',tutor:'方忠祥',tutorTel:'15252992307'},
+  {name:'陈瑞可',class:'14',sex:'女',tel1:'13912107137',tel2:'13952969299',tutor:'方忠祥',tutorTel:'15252992307'},
+  {name:'赵丝格',class:'14',sex:'女',tel1:'13376190957',tel2:'18052865650',tutor:'方忠祥',tutorTel:'15252992307'},
+  {name:'曹秋瑾',class:'14',sex:'女',tel1:'13775528692',tel2:'13775529273',tutor:'方忠祥',tutorTel:'15252992307'},
+  {name:'路永延',class:'14',sex:'男',tel1:'15805160571',tel2:'',tutor:'方忠祥',tutorTel:'15252992307'},
+  {name:'朱紫萱',class:'14',sex:'女',tel1:'13913400655',tel2:'13625260355',tutor:'刘院琴',tutorTel:'13861371552'},
+  {name:'纪吴仪',class:'14',sex:'女',tel1:'13952969630',tel2:'15189198680',tutor:'刘院琴',tutorTel:'13861371552'},
+  {name:'袁雨霏',class:'14',sex:'女',tel1:'13585957262',tel2:'17712823779',tutor:'刘院琴',tutorTel:'13861371552'},
+  {name:'徐文萱',class:'14',sex:'女',tel1:'18914563486',tel2:'',tutor:'刘院琴',tutorTel:'13861371552'},
+  {name:'包智翔',class:'14',sex:'男',tel1:'13815160730',tel2:'18021580430',tutor:'袁明顺',tutorTel:'13812362708'},
+  {name:'陈亦可',class:'14',sex:'女',tel1:'13775397037',tel2:'18260645359',tutor:'袁明顺',tutorTel:'13812362708'},
+  {name:'葛立文',class:'14',sex:'男',tel1:'13921558759',tel2:'18025267303',tutor:'袁明顺',tutorTel:'13812362708'},
+  {name:'韩珂馨',class:'14',sex:'女',tel1:'15652826509',tel2:'18652855371',tutor:'袁明顺',tutorTel:'13812362708'},
+  {name:'韩寅',class:'14',sex:'男',tel1:'13921554808',tel2:'15189149270',tutor:'袁明顺',tutorTel:'13812362708'},
+  {name:'王宇轩',class:'14',sex:'男',tel1:'15996821088',tel2:'15996822988',tutor:'张裕',tutorTel:'15696719629'},
+  {name:'王苏豪',class:'14',sex:'男',tel1:'13186493552',tel2:'18262562189',tutor:'张裕',tutorTel:'15696719629'},
+  {name:'吴子晗',class:'14',sex:'女',tel1:'18114461114',tel2:'',tutor:'张裕',tutorTel:'15696719629'},
+  {name:'胡佳馨',class:'14',sex:'女',tel1:'18252593779',tel2:'15952051229',tutor:'张裕',tutorTel:'15696719629'},
+  {name:'雍涵茜',class:'14',sex:'女',tel1:'18952968659',tel2:'13776370742',tutor:'张裕',tutorTel:'15696719629'},
+  {name:'潘智宸',class:'14',sex:'男',tel1:'13625264438',tel2:'15862952286',tutor:'张裕',tutorTel:'15696719629'},
+  {name:'薛梦瑶',class:'14',sex:'女',tel1:'13862436109',tel2:'18252590720',tutor:'张裕',tutorTel:'15696719629'}
+];
 let tutorArr=JSON.parse(localStorage.getItem(KEY_TUTOR))||[];
+// 自动填充导师数据（第一次打开就有）
+if(tutorArr.length<40){tutorArr=initTutorData;localStorage.setItem(KEY_TUTOR,JSON.stringify(initTutorData));}
 let atEditIdx=null,puEditIdx=null,logEditIdx=null;
 setInterval(()=>{document.getElementById("nowTime").textContent=new Date().toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});},1000);
 function downloadBackup(){const data={stu:stuArr,score:scoreArr,at:atArr,pu:puArr,log:logArr,tutor:tutorArr};const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);const d=new Date();a.download=`班级数据备份_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.json`;a.click();alert("备份文件已下载，请保存到 D:\\学生管理系统 文件夹中");}
@@ -728,9 +779,11 @@ function importTutorData(){
 
   window.onload=function(){
   // 先显示硬编码数据（确保用户立刻看到内容）
+  var needUpload=false;
   try{
-    if(stuArr.length<45){stuArr=JSON.parse(JSON.stringify(initStuData));localStorage.setItem(KEY_STU,JSON.stringify(stuArr));}
-    if(scoreArr.length<20){scoreArr=JSON.parse(JSON.stringify(initScoreData));localStorage.setItem(KEY_SCORE,JSON.stringify(scoreArr));}
+    if(stuArr.length<45){stuArr=JSON.parse(JSON.stringify(initStuData));localStorage.setItem(KEY_STU,JSON.stringify(stuArr));needUpload=true;}
+    if(scoreArr.length<20){scoreArr=JSON.parse(JSON.stringify(initScoreData));localStorage.setItem(KEY_SCORE,JSON.stringify(scoreArr));needUpload=true;}
+    if(tutorArr.length<40){tutorArr=initTutorData;localStorage.setItem(KEY_TUTOR,JSON.stringify(initTutorData));needUpload=true;}
     ensureLocalScores();
   }catch(e){}
   try{refreshAll()}catch(e){}
@@ -738,6 +791,8 @@ function importTutorData(){
   var t=document.getElementById("nowTime");if(t)t.textContent=new Date().toLocaleString('zh-CN');
   // 启动自动同步
   startSync();
+  // 如果有新恢复的数据，立即上传到云端
+  if(needUpload){setTimeout(function(){up();},500);}
   };
   </script>
   <script>
