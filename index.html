@@ -628,10 +628,10 @@ const initScoreData=[
 ];
 if(localStorage.getItem('stuData_v')!=='v3'){localStorage.removeItem(KEY_STU);localStorage.setItem('stuData_v','v3');}
 if(localStorage.getItem('scoreData_v')!=='v1'){localStorage.setItem(KEY_SCORE,JSON.stringify(initScoreData));localStorage.setItem('scoreData_v','v1');}
-// 自动添加2026上学期期末考数据
-(function(){if(localStorage.getItem('final_v1')==='done')return;
-var old=JSON.parse(localStorage.getItem(KEY_SCORE))||[];
-old=old.filter(function(x){return x.exam!=="2026上学期期末考";});
+// 自动添加成绩数据（每次打开都检查，确保所有考试都在）
+(function(){var old=JSON.parse(localStorage.getItem(KEY_SCORE))||[];
+// 清理旧名字
+old=old.filter(function(x){return x.exam!=="2026年4月联考"&&x.exam!=="2026四月联考";});
 var finalData=[
   {exam:'2026上学期期末考',name:'王宇轩',yw:88,sx:61.5,yy:69.5,ls:76,zz:61,dl:52,total:408},
   {exam:'2026上学期期末考',name:'王安冉',yw:97.5,sx:16.5,yy:47,ls:72,zz:33,dl:44,total:310},
@@ -675,8 +675,17 @@ var finalData=[
   {exam:'2026上学期期末考',name:'滕欣然',yw:91.5,sx:75.5,yy:79.5,ls:82,zz:60,dl:50,total:438.5},
   {exam:'2026上学期期末考',name:'潘智宸',yw:85.5,sx:17,yy:88,ls:81,zz:31,dl:40,total:342.5}
 ];
-finalData.forEach(function(d){old.push(d);});
-localStorage.setItem(KEY_SCORE,JSON.stringify(old));localStorage.setItem('final_v1','done');})();
+finalData.forEach(function(d){if(!old.some(function(x){return x.exam===d.exam&&x.name===d.name;}))old.push(d);});
+// 添加期中考试数据（如果缺失）
+var midterm=[{exam:'2026年期中考试',name:'韩珂馨',yw:97,sx:107,yy:105.5,zz:57,ls:47,dl:80,total:493.5},{exam:'2026年期中考试',name:'包智翔',yw:102,sx:90,yy:88,zz:79,ls:56,dl:77,total:492},{exam:'2026年期中考试',name:'陈瑞可',yw:100,sx:74,yy:117,zz:79,ls:59,dl:61,total:490},{exam:'2026年期中考试',name:'雍涵茜',yw:103,sx:82,yy:107,zz:74,ls:53,dl:69,total:488},{exam:'2026年期中考试',name:'严雨萱',yw:109,sx:67,yy:106,zz:74,ls:69,dl:59,total:484},{exam:'2026年期中考试',name:'郭玥橦',yw:113,sx:61,yy:115,zz:72,ls:66,dl:56,total:483},{exam:'2026年期中考试',name:'赵丝格',yw:110,sx:67,yy:96,zz:75,ls:63,dl:71,total:482},{exam:'2026年期中考试',name:'滕欣然',yw:102,sx:86,yy:89.5,zz:74,ls:65,dl:61,total:477.5},{exam:'2026年期中考试',name:'王欣欣',yw:104,sx:65,yy:101,zz:70,ls:68,dl:66,total:474},{exam:'2026年期中考试',name:'葛立文',yw:90,sx:87,yy:77,zz:72,ls:56,dl:91,total:473},{exam:'2026年期中考试',name:'袁雨霏',yw:96,sx:64,yy:109,zz:75,ls:59,dl:69,total:472},{exam:'2026年期中考试',name:'纪吴仪',yw:104,sx:58,yy:105,zz:74,ls:63,dl:64,total:468},{exam:'2026年期中考试',name:'朱宏文',yw:103,sx:71,yy:87.5,zz:71,ls:61,dl:74,total:467.5},{exam:'2026年期中考试',name:'张俣航',yw:104,sx:52,yy:112,zz:67,ls:61,dl:69,total:465},{exam:'2026年期中考试',name:'陈亦可',yw:102,sx:76,yy:95.5,zz:67,ls:57,dl:66,total:463.5},{exam:'2026年期中考试',name:'吴子晗',yw:100,sx:49,yy:115.5,zz:69,ls:57,dl:71,total:461.5},{exam:'2026年期中考试',name:'朱嘉仪',yw:89,sx:64,yy:106.5,zz:71,ls:61,dl:67,total:458.5},{exam:'2026年期中考试',name:'焦子萱',yw:104,sx:74,yy:96.5,zz:66,ls:62,dl:53,total:455.5},{exam:'2026年期中考试',name:'曹秋瑾',yw:105,sx:47,yy:91.5,zz:71,ls:63,dl:74,total:451.5},{exam:'2026年期中考试',name:'管欣然',yw:101,sx:51,yy:98.5,zz:61,ls:68,dl:71,total:450.5}];
+midterm.forEach(function(d){if(!old.some(function(x){return x.exam===d.exam&&x.name===d.name;}))old.push(d);});
+// 补全5月联考数据的idCard
+var mayScores=old.filter(function(x){return x.exam==='2026年5月联考';});
+if(mayScores.length>0){
+  var stuArr=JSON.parse(localStorage.getItem(KEY_STU))||[];
+  mayScores.forEach(function(s){var stu=stuArr.find(function(x){return x.name===s.name;});if(stu&&!s.idCard)s.idCard=stu.idCard;});
+}
+localStorage.setItem(KEY_SCORE,JSON.stringify(old));})();
 if(!localStorage.getItem(KEY_STU))localStorage.setItem(KEY_STU,JSON.stringify(initStuData));
 let stuArr=JSON.parse(localStorage.getItem(KEY_STU))||initStuData;
 let scoreArr=JSON.parse(localStorage.getItem(KEY_SCORE))||initScoreData;
