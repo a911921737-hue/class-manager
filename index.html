@@ -520,18 +520,24 @@ textarea.form-input { resize: vertical; min-height: 100px; line-height: 1.6; }
 <script>
 // === 自动同步（Supabase直连，手机可用）===
 var syncTimer=null;
+var saveGuard=0;
 function sbh(){return {'apikey':'sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Authorization':'Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Content-Type':'application/json'};}
 function ss(s){var d=document.getElementById('syncDot'),t=document.getElementById('syncText');if(!d||!t)return;if(s==='ok'){d.style.background='var(--green)';t.textContent='已同步';}else if(s==='busy'){d.style.background='var(--orange)';t.textContent='同步中…';}else{d.style.background='var(--text4)';t.textContent='未连接';}}
 function ad(){var d={stu:stuArr,score:scoreArr,at:atArr,pu:puArr,log:logArr,tutor:tutorArr};return JSON.stringify(d);}
 async function up(){ss('busy');try{var p=JSON.parse(ad());var ex=await fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?select=id&id=eq.class2025',{headers:sbh()});var x=await ex.json();if(x&&x.length>0){await fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?id=eq.class2025',{method:'PATCH',headers:{'apikey':'sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Authorization':'Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},body:JSON.stringify({data:p,updated_at:new Date().toISOString()})});}else{await fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data',{method:'POST',headers:sbh(),body:JSON.stringify({id:'class2025',data:p,updated_at:new Date().toISOString()})});}ss('ok');}catch(e){ss('ok');}}
-async function down(){try{var r=await fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?select=data&id=eq.class2025',{headers:{'apikey':'sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Authorization':'Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd'}});var d=await r.json();if(!d||!d[0]||!d[0].data)return;var dd=d[0].data;
-// 无条件同步动态数据（云端为准）
-var old=JSON.stringify(atArr)+JSON.stringify(puArr)+JSON.stringify(logArr);
+async function down(){saveGuard=Date.now();try{var r=await fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?select=data&id=eq.class2025',{headers:{'apikey':'sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Authorization':'Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd'}});var d=await r.json();if(!d||!d[0]||!d[0].data)return;var dd=d[0].data;
+// 刚保存过就跳过下载（让上传先完成）
+if(Date.now()-saveGuard<2500)return;
+// 用户正在编辑时不同步（防止覆盖）
+if(document.querySelector('.modal[style*=\"flex\"]'))return;
+// 云端动态数据有变化才覆盖
+var cp=JSON.stringify(atArr)+'|'+JSON.stringify(puArr)+'|'+JSON.stringify(logArr);
+var cd=JSON.stringify(dd.at||[])+'|'+JSON.stringify(dd.pu||[])+'|'+JSON.stringify(dd.log||[]);
+if(cp===cd){ss('ok');return;}
 atArr=dd.at||[];localStorage.setItem(KEY_AT,JSON.stringify(atArr));
 puArr=dd.pu||[];localStorage.setItem(KEY_PU,JSON.stringify(puArr));
 logArr=dd.log||[];localStorage.setItem(KEY_LOG,JSON.stringify(logArr));
-ss('ok');
-if(JSON.stringify(atArr)+JSON.stringify(puArr)+JSON.stringify(logArr)!==old)refreshAll();
+ss('ok');refreshAll();
 }catch(e){ss('no');}}
 function syncTest(){ss('busy');fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?select=id&id=eq.pingtest',{headers:{'apikey':'sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Authorization':'Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd'}}).then(function(r){if(r.ok){ss('ok');alert('连接成功！');}else{ss('no');alert('无法连接');}}).catch(function(){ss('no');alert('无法连接');});}
 var syncUpload=up,syncDownload=down;
