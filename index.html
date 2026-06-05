@@ -525,20 +525,12 @@ function ss(s){var d=document.getElementById('syncDot'),t=document.getElementByI
 function ad(){var d={stu:stuArr,score:scoreArr,at:atArr,pu:puArr,log:logArr,tutor:tutorArr};return JSON.stringify(d);}
 async function up(){ss('busy');try{var p=JSON.parse(ad());var ex=await fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?select=id&id=eq.class2025',{headers:sbh()});var x=await ex.json();if(x&&x.length>0){await fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?id=eq.class2025',{method:'PATCH',headers:{'apikey':'sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Authorization':'Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},body:JSON.stringify({data:p,updated_at:new Date().toISOString()})});}else{await fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data',{method:'POST',headers:sbh(),body:JSON.stringify({id:'class2025',data:p,updated_at:new Date().toISOString()})});}ss('ok');}catch(e){ss('ok');}}
 async function down(){try{var r=await fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?select=data&id=eq.class2025',{headers:{'apikey':'sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Authorization':'Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd'}});var d=await r.json();if(!d||!d[0]||!d[0].data)return;var dd=d[0].data;
-// 同步动态数据（考勤/违纪/日志）
+// 只同步动态数据（不覆盖本地硬编码的主数据）
 var ch=0;
-if(dd.at&&dd.at.length>atArr.length){atArr=dd.at;localStorage.setItem(KEY_AT,JSON.stringify(atArr));ch=1;}
-if(dd.pu&&dd.pu.length>puArr.length){puArr=dd.pu;localStorage.setItem(KEY_PU,JSON.stringify(puArr));ch=1;}
-if(dd.log&&dd.log.length>logArr.length){logArr=dd.log;localStorage.setItem(KEY_LOG,JSON.stringify(logArr));ch=1;}
-ss('ok');
-// 每次同步后确保本地数据完整（补充硬编码数据缺失的考试）
-try{
-  if(scoreArr&&!scoreArr.some(function(x){return x.exam==='2026期中考试';})){
-    ensureLocalScores();
-    ch=1;
-  }
-}catch(e){}
-if(ch)refreshAll();
+if(dd.at&&dd.at.length>atArr.length&&JSON.stringify(dd.at)!==JSON.stringify(atArr)){atArr=dd.at;localStorage.setItem(KEY_AT,JSON.stringify(atArr));ch=1;}
+if(dd.pu&&dd.pu.length>puArr.length&&JSON.stringify(dd.pu)!==JSON.stringify(puArr)){puArr=dd.pu;localStorage.setItem(KEY_PU,JSON.stringify(puArr));ch=1;}
+if(dd.log&&dd.log.length>logArr.length&&JSON.stringify(dd.log)!==JSON.stringify(logArr)){logArr=dd.log;localStorage.setItem(KEY_LOG,JSON.stringify(logArr));ch=1;}
+ss('ok');if(ch)refreshAll();
 }catch(e){ss('no');}}
 function syncTest(){ss('busy');fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?select=id&id=eq.pingtest',{headers:{'apikey':'sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Authorization':'Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd'}}).then(function(r){if(r.ok){ss('ok');alert('连接成功！');}else{ss('no');alert('无法连接');}}).catch(function(){ss('no');alert('无法连接');});}
 var syncUpload=up,syncDownload=down;
