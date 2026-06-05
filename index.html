@@ -462,7 +462,6 @@ textarea.form-input { resize: vertical; min-height: 100px; line-height: 1.6; }
 <div class="modal" id="tutorModal">
   <div class="modal-box">
     <div class="modal-title">新增 / 编辑导师关系</div>
-    <div class="form-item"><label>班级</label><input class="form-input" id="t_class" placeholder="如 14"></div>
     <div class="form-item"><label>学生姓名 *</label><input class="form-input" id="t_name" placeholder="学生姓名"></div>
     <div class="form-item"><label>性别</label><select class="form-input" id="t_sex"><option value="">请选择</option><option>男</option><option>女</option></select></div>
     <div class="form-item"><label>学生电话1</label><input class="form-input" id="t_tel1" placeholder="学生手机号"></div>
@@ -690,16 +689,16 @@ function clearAllData(){if(!confirm("确定清空全部本地数据？此操作�
 
 // ===== 导师制函数 =====
 let tutorEditIdx=null;
-function openTutorModal(){document.getElementById("tutorModal").style.display="flex";["t_class","t_name","t_sex","t_tel1","t_tel2","t_tutor","t_tutorTel"].forEach(id=>document.getElementById(id).value="");tutorEditIdx=null;}
+function openTutorModal(){document.getElementById("tutorModal").style.display="flex";["t_name","t_sex","t_tel1","t_tel2","t_tutor","t_tutorTel"].forEach(id=>document.getElementById(id).value="");tutorEditIdx=null;}
 function saveTutor(){
-  const d={class:document.getElementById("t_class").value.trim(),name:document.getElementById("t_name").value.trim(),sex:document.getElementById("t_sex").value,tel1:document.getElementById("t_tel1").value.trim(),tel2:document.getElementById("t_tel2").value.trim(),tutor:document.getElementById("t_tutor").value.trim(),tutorTel:document.getElementById("t_tutorTel").value.trim()};
+  const d={name:document.getElementById("t_name").value.trim(),sex:document.getElementById("t_sex").value,tel1:document.getElementById("t_tel1").value.trim(),tel2:document.getElementById("t_tel2").value.trim(),tutor:document.getElementById("t_tutor").value.trim(),tutorTel:document.getElementById("t_tutorTel").value.trim()};
   if(!d.name||!d.tutor)return alert("学生姓名和导师姓名不能为空");
   if(tutorEditIdx!==null)tutorArr[tutorEditIdx]=d;else tutorArr.push(d);
   localStorage.setItem(KEY_TUTOR,JSON.stringify(tutorArr));closeAllModal();renderTutor();syncUpload();
 }
 function editTutor(idx){
   const s=tutorArr[idx];if(!s)return;
-  document.getElementById("t_class").value=s.class||"";document.getElementById("t_name").value=s.name;
+  document.getElementById("t_name").value=s.name;
   document.getElementById("t_sex").value=s.sex||"";document.getElementById("t_tel1").value=s.tel1||"";
   document.getElementById("t_tel2").value=s.tel2||"";document.getElementById("t_tutor").value=s.tutor;
   document.getElementById("t_tutorTel").value=s.tutorTel||"";tutorEditIdx=idx;
