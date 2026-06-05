@@ -1,0 +1,812 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>班级综合管理</title>
+<script>if(localStorage.getItem('stuData')&&JSON.parse(localStorage.getItem('stuData')).length<10)localStorage.removeItem('stuData');
+if(localStorage.getItem('scoreData')&&JSON.parse(localStorage.getItem('scoreData')).length<20)localStorage.removeItem('scoreData');
+if(localStorage.getItem('tutorData')&&JSON.parse(localStorage.getItem('tutorData')).length<40)localStorage.removeItem('tutorData');
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+
+:root {
+  --bg:            #F5F5F7;
+  --bg-hero:       linear-gradient(180deg, #FAFAFA 0%, #F5F5F7 100%);
+  --surface:       rgba(255,255,255,0.82);
+  --surface-solid: #FFFFFF;
+  --modal-surface: rgba(255,255,255,0.88);
+  --text:          #1D1D1F;
+  --text2:         #424245;
+  --text3:         #86868B;
+  --text4:         #B0B0B5;
+  --line:          rgba(0,0,0,0.04);
+  --line2:         rgba(0,0,0,0.08);
+  --blue:          #0071E3;
+  --blue-hover:    #0077ED;
+  --blue-active:   #006EDB;
+  --blue-light:    #E8F0FE;
+  --green:         #30A64A;
+  --green-light:   #E8F8ED;
+  --orange:        #E37D00;
+  --orange-light:  #FFF3E0;
+  --red:           #D32F2F;
+  --red-light:     #FDE8E8;
+  --radius-sm:     8px;
+  --radius:        12px;
+  --radius-lg:     16px;
+  --radius-xl:     20px;
+  --radius-pill:   999px;
+  --shadow-sm:     0 1px 2px rgba(0,0,0,0.04);
+  --shadow:        0 1px 3px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04);
+  --shadow-lg:     0 2px 8px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06);
+  --shadow-xl:     0 4px 16px rgba(0,0,0,0.05), 0 12px 40px rgba(0,0,0,0.08);
+  --speed:         0.35s;
+  --ease:          cubic-bezier(0.25,0.1,0.25,1);
+  --ease-spring:   cubic-bezier(0.34,1.56,0.64,1);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:            #101010;
+    --bg-hero:       linear-gradient(180deg, #151515 0%, #101010 100%);
+    --surface:       rgba(36,36,38,0.78);
+    --surface-solid: #1C1C1E;
+    --modal-surface: rgba(36,36,38,0.92);
+    --text:          #F5F5F7;
+    --text2:         #C7C7CC;
+    --text3:         #8E8E93;
+    --text4:         #636366;
+    --line:          rgba(255,255,255,0.04);
+    --line2:         rgba(255,255,255,0.08);
+    --blue:          #2997FF;
+    --blue-hover:    #40A9FF;
+    --blue-active:   #0088FF;
+    --blue-light:    rgba(41,151,255,0.12);
+    --green:         #30D158;
+    --green-light:   rgba(48,209,88,0.12);
+    --orange:        #FF9F0A;
+    --orange-light:  rgba(255,159,10,0.12);
+    --red:           #FF453A;
+    --red-light:     rgba(255,69,58,0.12);
+    --shadow-sm:     0 1px 2px rgba(0,0,0,0.3);
+    --shadow:        0 1px 3px rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.25);
+    --shadow-lg:     0 2px 8px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.3);
+    --shadow-xl:     0 4px 16px rgba(0,0,0,0.35), 0 12px 40px rgba(0,0,0,0.35);
+  }
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+::selection { background: rgba(0,113,227,0.15); }
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--text4); border-radius:2px; }
+body {
+  background: var(--bg); background-image: var(--bg-hero); min-height: 100vh;
+  font-family: -apple-system, "SF Pro Display", "SF Pro Text", "PingFang SC", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+  color: var(--text); line-height: 1.4706; letter-spacing: -0.022em;
+}
+.header {
+  position: sticky; top:0; z-index:100;
+  padding: 0 32px; height: 52px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(255,255,255,0.78);
+  -webkit-backdrop-filter: blur(50px) saturate(1.6);
+  backdrop-filter: blur(50px) saturate(1.6);
+  border-bottom: 0.5px solid var(--line2);
+}
+.header h1 { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px; color: var(--text); }
+
+.time-box { font-size: 12px; font-weight: 400; color: var(--text3); font-variant-numeric: tabular-nums; background: rgba(60,60,67,0.04); padding: 4px 14px; border-radius: var(--radius-pill); }
+.wrap { max-width: 1360px; margin: 0 auto; padding: 32px 32px 64px; display: flex; gap: 32px; }
+.sidebar { width: 200px; flex-shrink: 0; position: sticky; top: 80px; height: fit-content; }
+.sidebar-label { font-size: 11px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; color: var(--text3); margin-bottom: 14px; padding: 0 4px; }
+.menu-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; margin-bottom: 2px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text2); transition: all var(--speed) var(--ease); user-select: none; }
+.menu-item .icon-wrap { width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; background: transparent; flex-shrink: 0; }
+.menu-item:hover { background: rgba(0,0,0,0.03); color: var(--text); }
+.menu-item:active { transform: scale(0.97); }
+.menu-item.active { background: var(--blue-light); color: var(--blue); font-weight: 600; }
+.menu-item.active .icon-wrap { background: var(--blue); color: #fff; box-shadow: 0 2px 6px rgba(0,113,227,0.2); }
+.main-content { flex:1; display: flex; flex-direction: column; gap: 24px; }
+.section { background: var(--surface); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); border: 0.5px solid rgba(255,255,255,0.3); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden; transition: box-shadow var(--speed) var(--ease); }
+.section:hover { box-shadow: var(--shadow-lg); }
+.section-header { padding: 22px 28px 0; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.section-title { font-size: 19px; font-weight: 700; letter-spacing: -0.02em; color: var(--text); line-height: 1.3; }
+.section-body { padding: 18px 28px 24px; }
+.stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.stat-card { padding: 24px 20px 20px; border-radius: var(--radius); text-align: center; background: var(--surface-solid); border: 0.5px solid var(--line2); box-shadow: var(--shadow-sm); transition: all var(--speed) var(--ease-spring); cursor: default; position: relative; overflow: hidden; }
+.stat-card::before { content: ''; position: absolute; top: 0; left: 32px; right: 32px; height: 2px; background: linear-gradient(90deg, transparent, var(--blue), transparent); transform: scaleX(0); transition: transform 0.6s var(--ease); }
+.stat-card:hover { transform: translateY(-8px); box-shadow: var(--shadow-xl); border-color: var(--blue); }
+.stat-card:hover::before { transform: scaleX(1); }
+.stat-card .stat-icon { font-size: 28px; margin-bottom: 10px; display: block; }
+.stat-card p { font-size: 13px; font-weight: 400; color: var(--text3); margin-bottom: 4px; }
+.stat-card h2 { font-size: 34px; font-weight: 700; letter-spacing: -0.03em; color: var(--text); line-height: 1.1; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 18px; border: none; border-radius: var(--radius-pill); font-size: 12px; font-weight: 500; font-family: inherit; cursor: pointer; white-space: nowrap; transition: all var(--speed) var(--ease); user-select: none; line-height: 1.4; }
+.btn:active { transform: scale(0.94); }
+.btn-primary { background: var(--blue); color: #fff; }
+.btn-primary:hover { background: var(--blue-hover); box-shadow: 0 2px 8px rgba(0,113,227,0.25); }
+.btn-success { background: var(--green); color: #fff; }
+.btn-success:hover { box-shadow: 0 2px 8px rgba(48,166,74,0.25); }
+.btn-danger { background: var(--red); color: #fff; }
+.btn-danger:hover { box-shadow: 0 2px 8px rgba(211,47,47,0.25); }
+.btn-ghost { background: rgba(0,0,0,0.04); color: var(--text2); border: 0.5px solid var(--line2); }
+.btn-ghost:hover { background: rgba(0,0,0,0.06); color: var(--text); }
+.btn-group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.search-bar { display: flex; gap: 10px; margin-bottom: 16px; }
+.search-input { flex: 1; padding: 10px 16px; border-radius: 10px; border: 0.5px solid var(--line2); background: var(--surface-solid); font-size: 14px; font-family: inherit; outline: none; transition: all var(--speed) var(--ease); color: var(--text); }
+.search-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,113,227,0.1); }
+.search-input::placeholder { color: var(--text4); }
+.table-wrap { overflow-x: auto; border-radius: var(--radius); border: 0.5px solid var(--line2); background: var(--surface-solid); }
+table { width: 100%; border-collapse: separate; border-spacing: 0; }
+th { padding: 10px 16px; text-align: left; font-weight: 500; color: var(--text3); font-size: 11px; letter-spacing: 0.02em; text-transform: uppercase; background: rgba(0,0,0,0.02); border-bottom: 0.5px solid var(--line2); }
+td { padding: 10px 16px; font-size: 13px; font-weight: 400; color: var(--text); border-bottom: 0.5px solid var(--line); }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: rgba(0,113,227,0.03); }
+tbody tr:nth-child(even) td { background: rgba(0,0,0,0.01); }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 1px 10px; border-radius: var(--radius-pill); font-size: 11px; font-weight: 500; height: 22px; }
+.badge-green { background: var(--green-light); color: var(--green); }
+.badge-orange { background: var(--orange-light); color: var(--orange); }
+.badge-red { background: var(--red-light); color: var(--red); }
+.badge-blue { background: var(--blue-light); color: var(--blue); }
+.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.2); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); z-index: 999; align-items: center; justify-content: center; animation: modalFade 0.3s ease; }
+@keyframes modalFade { from { opacity:0 } to { opacity:1 } }
+.modal-box { width: 500px; max-height: 85vh; overflow-y: auto; padding: 32px 32px 28px; border-radius: var(--radius-xl); background: var(--modal-surface); -webkit-backdrop-filter: blur(60px) saturate(1.6); backdrop-filter: blur(60px) saturate(1.6); border: 0.5px solid rgba(255,255,255,0.5); box-shadow: var(--shadow-xl); animation: modalSlide 0.35s var(--ease-spring); }
+@keyframes modalSlide { from { transform:scale(0.92) translateY(16px); opacity:0 } to { transform:scale(1) translateY(0); opacity:1 } }
+.modal-title { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 20px; color: var(--text); }
+.form-item { margin-bottom: 18px; }
+.form-item label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: var(--text2); }
+.form-input { width: 100%; padding: 10px 14px; border-radius: 10px; border: 0.5px solid var(--line2); background: var(--surface-solid); font-size: 15px; font-family: inherit; outline: none; transition: all var(--speed) var(--ease); color: var(--text); }
+.form-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,113,227,0.1); }
+select.form-input { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7'%3E%3Cpath d='M.5.5l5 5 5-5' fill='none' stroke='%23868B' stroke-width='1.2'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 13px center; padding-right: 34px; cursor: pointer; }
+textarea.form-input { resize: vertical; min-height: 100px; line-height: 1.6; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.modal-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+.page { display: none; }
+.page.active { display: block; animation: pageIn 0.4s var(--ease); }
+@keyframes pageIn { from { opacity:0; transform:translateY(12px) } to { opacity:1; transform:translateY(0) } }
+.img-viewer { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; cursor: pointer; }
+.img-viewer img { max-width: 90vw; max-height: 90vh; border-radius: 16px; box-shadow: 0 10px 60px rgba(0,0,0,0.5); animation: modalSlide 0.35s var(--ease-spring); }
+.timeline { padding: 4px 0; }
+.timeline-day { padding: 16px 0 10px; border-bottom: 0.5px solid var(--line); }
+.timeline-day:first-child { padding-top: 0; }
+.timeline-day-label { font-size: 14px; font-weight: 600; margin-bottom: 14px; color: var(--text); }
+.timeline-item { display: flex; gap: 12px; padding: 6px 0; }
+.timeline-dot { width: 3px; border-radius: 2px; flex-shrink: 0; background: linear-gradient(180deg, var(--blue), transparent); opacity: 0.5; }
+.timeline-body { flex:1; }
+.timeline-time { font-size: 12px; color: var(--blue); font-weight: 500; margin-bottom: 2px; }
+.timeline-content { font-size: 14px; line-height: 1.6; white-space: pre-wrap; color: var(--text2); }
+.timeline-actions { margin-top: 6px; display: flex; gap: 6px; }
+.empty-state { text-align: center; padding: 48px 20px; color: var(--text4); font-size: 14px; line-height: 2; }
+.exam-preview { padding: 4px 0; font-size: 14px; color: var(--text3); line-height: 1.8; }
+.exam-preview strong { color: var(--text); }
+.exam-top3 { font-size: 12px; color: var(--orange); display: flex; gap: 16px; margin-top: 4px; flex-wrap: wrap; }
+
+/* Responsive sidebar toggle */
+.menu-toggle { display: none; appearance: none; border: none; background: transparent; font-size: 20px; padding: 6px 8px; border-radius: 8px; cursor: pointer; color: var(--text2); }
+.menu-toggle:active { transform: scale(0.96); }
+.overlay { display: none; }
+@media (max-width: 960px) {
+  .menu-toggle { display: inline-flex; align-items: center; justify-content: center; margin-right:10px; }
+  .header { padding: 0 12px; height: 44px; }
+  .header h1 { font-size: 13px; }
+  .wrap { padding: 12px 12px 60px; gap: 14px; }
+  .sidebar { display: block; position: fixed; left: -320px; top: 0; bottom: 0; width: 240px; z-index: 250; padding: 20px 16px; background: var(--surface); box-shadow: 0 8px 24px rgba(0,0,0,0.12); border-right: 0.5px solid var(--line2); transition: left 0.28s var(--ease); height: 100vh; overflow-y: auto; }
+  .sidebar.open { left: 0; }
+  .overlay { display: none; }
+  .overlay.show { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.32); z-index: 200; }
+  .stat-row { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stat-card { padding: 12px 10px 10px; }
+  .stat-card h2 { font-size: 22px; }
+  .stat-card p { font-size: 11px; }
+  .section-body { padding: 10px 14px 14px; }
+  .section-header { padding: 14px 14px 0; }
+  .section-title { font-size: 15px; }
+  th, td { padding: 6px 8px; font-size: 11px; }
+  .btn { padding: 5px 12px; font-size: 11px; }
+  .table-wrap { max-height: none; overflow-x: auto; overflow-y: visible; }
+  .table-wrap table { min-width: 580px; }
+  .form-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .search-input { font-size: 13px; padding: 8px 12px; }
+  .time-box { font-size: 11px; padding: 3px 10px; }
+  .badge { font-size: 10px; padding: 1px 8px; height: 20px; }
+  .menu-item { padding: 6px 10px; font-size: 12px; }
+  .sidebar-label { font-size: 10px; margin-bottom: 10px; }
+}
+
+@media (max-width: 600px) {
+  .stat-row { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .stat-card { padding: 10px 8px 8px; }
+  .stat-card h2 { font-size: 18px; }
+  .stat-card p { font-size: 10px; }
+  .section-body { padding: 8px 12px 12px; }
+  .section-header { padding: 12px 12px 0; }
+  .section-title { font-size: 14px; }
+  th, td { padding: 5px 6px; font-size: 10px; }
+  .btn { padding: 4px 10px; font-size: 10px; width: auto; }
+  .btn-group { width: auto; flex-direction: row; gap: 4px; }
+  .btn-group .btn { width: auto; }
+  .table-wrap table { min-width: 500px; }
+  .modal-box { width: 96%; padding: 20px 16px 16px; }
+  .form-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .form-item { margin-bottom: 12px; }
+  .form-input { font-size: 13px; padding: 8px 10px; }
+  .search-input { font-size: 12px; padding: 6px 10px; }
+  th { font-size: 8px; letter-spacing: 0.01em; padding: 4px 5px; }
+  .section { border-radius: var(--radius); }
+  .wrap { padding: 8px 8px 40px; gap: 10px; }
+  .header { padding: 0 8px; height: 40px; }
+  .header h1 { font-size: 12px; }
+  .badge { font-size: 9px; padding: 1px 6px; height: 18px; }
+  .menu-item { padding: 5px 8px; font-size: 11px; }
+  .empty-state { padding: 24px 12px; font-size: 12px; }
+  .exam-preview { font-size: 12px; }
+  .exam-top3 { font-size: 10px; gap: 8px; }
+  td[style*="monospace"] { font-size: 10px !important; letter-spacing: 0.1px !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <button class="menu-toggle" onclick="toggleSidebar()" aria-label="打开菜单">☰</button>
+  <h1><span></span> 班级综合管理</h1>
+  <div class="time-box" id="nowTime"></div>
+</div>
+
+<div id="overlay" class="overlay" onclick="toggleSidebar(false)"></div>
+
+<div class="wrap">
+  <div class="sidebar">
+    <div class="sidebar-label">功能菜单</div>
+    <div class="menu-item active" onclick="switchPage('home')"><span class="icon-wrap">🏠</span> 数据首页</div>
+    <div class="menu-item" onclick="switchPage('student')"><span class="icon-wrap">👤</span> 学生档案</div>
+    <div class="menu-item" onclick="switchPage('score')"><span class="icon-wrap">📖</span> 成绩管理</div>
+    <div class="menu-item" onclick="switchPage('attend')"><span class="icon-wrap">📅</span> 考勤记录</div>
+    <div class="menu-item" onclick="switchPage('punish')"><span class="icon-wrap">⚠️</span> 违纪登记</div>
+    <div class="menu-item" onclick="switchPage('log')"><span class="icon-wrap">📝</span> 班级日志</div>
+    <div class="menu-item" onclick="switchPage('tutor')"><span class="icon-wrap">👩‍🏫</span> 全员导师制</div>
+    <div class="menu-item" onclick="switchPage('settings')"><span class="icon-wrap">⚙️</span> 同步设置</div>
+  </div>
+
+  <div class="main-content">
+
+    <div id="home" class="page active">
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">数据概览</div>
+          <div class="btn-group">
+            <button class="btn btn-success" onclick="downloadBackup()">备份到本地</button>
+            <button class="btn btn-ghost" onclick="document.getElementById('restoreInput').click()">从备份恢复</button>
+            <input type="file" id="restoreInput" accept=".json" style="display:none" onchange="restoreBackup(event)">
+            <button class="btn btn-danger" onclick="clearAllData()">清空</button>
+          </div>
+        </div>
+        <div class="section-body">
+          <div class="stat-row">
+            <div class="stat-card"><p>👤 班级总人数</p><h2 id="allStu">0</h2></div>
+            <div class="stat-card"><p>📖 考试次数</p><h2 id="examCount">0</h2></div>
+            <div class="stat-card"><p>⚠️ 违纪记录</p><h2 id="punishCount">0</h2></div>
+          </div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">考试概览</div>
+          <div class="btn-group">
+            <button class="btn btn-primary" onclick="showExamRank('2026年5月联考')">排名</button>
+            <button class="btn btn-success" onclick="exportScores()">导出成绩 CSV</button>
+          </div>
+        </div>
+        <div class="section-body">
+          <div id="examPreview" class="exam-preview">正在加载考试数据…</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="student" class="page">
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">学生信息</div>
+          <div class="btn-group">
+            <button class="btn btn-primary" onclick="openStuModal()">新增学生</button>
+          </div>
+        </div>
+        <div class="section-body">
+          <div class="search-bar"><input class="search-input" id="stuSearch" placeholder="姓名 / 身份证号 / 电话 / 住址"><button class="btn btn-success" onclick="searchStu()">搜索</button></div>
+          <div class="table-wrap"><table><thead><tr><th>姓名</th><th>性别</th><th>身份证号</th><th>家长电话1</th><th>家长电话2</th><th>家庭住址</th><th>操作</th></tr></thead><tbody id="stuTable"></tbody></table></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="score" class="page">
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">成绩管理</div>
+          <div class="btn-group">
+            <select class="form-input" id="sc_exam_selector" style="width:auto;min-width:160px;padding:7px 12px" onchange="switchExam()"></select>
+            <button class="btn btn-ghost" onclick="addExam()">新增考试</button>
+            <button class="btn btn-primary" onclick="openScModal()">录入</button>
+            <button class="btn btn-success" onclick="exportScores()">导出 CSV</button>
+          </div>
+        </div>
+        <div class="section-body">
+          <div class="search-bar"><input class="search-input" id="scSearch" placeholder="姓名搜索"><button class="btn btn-success" onclick="searchSc()">搜索</button></div>
+          <div class="table-wrap"><table><thead><tr><th>#</th><th>姓名</th><th>语文</th><th>数学</th><th>英语</th><th>历史</th><th>政治</th><th>地理</th><th>总分</th><th>操作</th></tr></thead><tbody id="scTable"></tbody></table></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="attend" class="page">
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">每日考勤</div>
+          <button class="btn btn-ghost" onclick="openAtModal()">新增记录</button>
+        </div>
+        <div class="section-body">
+          <div class="search-bar" style="flex-wrap:wrap">
+            <input class="search-input" id="at_date_picker" type="date" style="max-width:200px;flex:none">
+            <button class="btn btn-success" onclick="loadDailyAt()">查看</button>
+            <button class="btn btn-primary" onclick="saveDailyAt()">保存今日</button>
+            <button class="btn btn-ghost" onclick="setAllAt()">全部出勤</button>
+          </div>
+          <div class="table-wrap"><table><thead><tr><th>姓名</th><th>性别</th><th>身份证号</th><th>考勤状态</th><th>备注</th></tr></thead><tbody id="atDailyTable"></tbody></table></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-header"><div class="section-title">考勤历史</div></div>
+        <div class="section-body">
+          <div class="table-wrap"><table><thead><tr><th>日期</th><th>姓名</th><th>身份证号</th><th>状态</th><th>备注</th><th>操作</th></tr></thead><tbody id="atTable"></tbody></table></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="punish" class="page">
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">违纪台账</div>
+          <button class="btn btn-primary" onclick="openPuModal()">新增违纪</button>
+        </div>
+        <div class="section-body">
+          <div class="table-wrap"><table><thead><tr><th>日期</th><th>姓名</th><th>违纪类型</th><th>备注</th><th>图片</th><th>操作</th></tr></thead><tbody id="puTable"></tbody></table></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="log" class="page">
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">班级日志</div>
+          <button class="btn btn-primary" onclick="openLogModal()">写日志</button>
+        </div>
+        <div class="section-body">
+          <div id="logTimeline" class="timeline"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== 全员导师制 ========== -->
+    <div id="tutor" class="page">
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">👩‍🏫 全员导师制</div>
+          <div class="btn-group">
+            <button class="btn btn-primary" onclick="openTutorModal()">新增</button>
+            <button class="btn btn-success" onclick="importTutorData()">从Excel批量导入</button>
+          </div>
+        </div>
+        <div class="section-body">
+          <div class="search-bar"><input class="search-input" id="tutorSearch" placeholder="搜索学生姓名 / 导师姓名"><button class="btn btn-success" onclick="searchTutor()">搜索</button></div>
+          <div class="table-wrap"><table><thead><tr><th>序号</th><th>学生姓名</th><th>性别</th><th>家长电话1</th><th>家长电话2</th><th>导师姓名</th><th>导师电话</th><th>操作</th></tr></thead><tbody id="tutorTable"></tbody></table></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="settings" class="page">
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">⚙️ 云端同步设置</div>
+          <div class="sync-status" id="syncStatus" style="font-size:13px;display:flex;align-items:center;gap:6px">
+            <span id="syncDot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--text4)"></span>
+            <span id="syncText">未连接</span>
+          </div>
+        </div>
+        <div class="section-body">
+          <div class="form-item"><label>同步服务器地址</label><input class="form-input" id="syncUrl" placeholder="https://celadon-tarsier-b90204.netlify.app" style="font-family:monospace;font-size:13px"></div>
+          <div class="form-item"><label>班级同步密钥</label><input class="form-input" id="syncKey" placeholder="输入一个唯一标识，如 class2025" style="font-family:monospace;font-size:13px"></div>
+          <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+            <button class="btn btn-primary" onclick="syncTest()">测试连接</button>
+            <button class="btn btn-success" onclick="syncUpload()">手动上传到云端</button>
+            <button class="btn btn-ghost" onclick="syncDownload()">手动从云端拉取</button>
+          </div>
+          <div style="margin-top:16px;padding:12px;background:var(--blue-light);border-radius:10px;font-size:13px;line-height:1.6;color:var(--text2)">
+            <strong>💡 自动同步</strong><br>
+            数据自动通过 Supabase 云端同步，无需手动操作。<br>
+            保存数据后自动上传，其他设备刷新后自动拉取。
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modals -->
+<div class="modal" id="stuModal">
+  <div class="modal-box">
+    <div class="modal-title">新增 / 编辑学生</div>
+    <div class="form-item"><label>姓名 *</label><input class="form-input" id="s_name"></div>
+    <div class="form-item"><label>性别</label><input class="form-input" id="s_sex" placeholder="男 / 女"></div>
+    <div class="form-item"><label>身份证号 *</label><input class="form-input" id="s_idCard" maxlength="18" placeholder="18 位身份证号"></div>
+    <div class="form-item"><label>家长电话1</label><input class="form-input" id="s_tel" placeholder="手机号码"></div>
+    <div class="form-item"><label>家长电话2</label><input class="form-input" id="s_tel2" placeholder="手机号码"></div>
+    <div class="form-item"><label>家庭住址</label><input class="form-input" id="s_address" placeholder="详细住址"></div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeAllModal()">取消</button><button class="btn btn-primary" onclick="saveStu()">保存</button></div>
+  </div>
+</div>
+
+<div class="modal" id="scModal">
+  <div class="modal-box">
+    <div class="modal-title">录入成绩</div>
+    <div class="form-item"><label>考试名称</label><select class="form-input" id="sc_exam"></select></div>
+    <div class="form-item"><label>姓名</label><input class="form-input" id="sc_name"></div>
+    <div class="form-grid">
+      <div class="form-item"><label>语文</label><input class="form-input" id="sc_yw" type="number" step="0.5"></div>
+      <div class="form-item"><label>数学</label><input class="form-input" id="sc_sx" type="number" step="0.5"></div>
+      <div class="form-item"><label>英语</label><input class="form-input" id="sc_yy" type="number" step="0.5"></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-item"><label>历史</label><input class="form-input" id="sc_ls" type="number" step="0.5"></div>
+      <div class="form-item"><label>政治</label><input class="form-input" id="sc_zz" type="number" step="0.5"></div>
+      <div class="form-item"><label>地理</label><input class="form-input" id="sc_dl" type="number" step="0.5"></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeAllModal()">取消</button><button class="btn btn-primary" onclick="saveSc()">保存</button></div>
+  </div>
+</div>
+
+<div class="modal" id="atModal">
+  <div class="modal-box">
+    <div class="modal-title">新增考勤</div>
+    <div class="form-item"><label>日期</label><input class="form-input" id="at_date" type="date"></div>
+    <div class="form-item"><label>姓名</label><input class="form-input" id="at_name"></div>
+    <div class="form-item"><label>身份证号</label><input class="form-input" id="at_idCard"></div>
+    <div class="form-item"><label>考勤状态</label><select class="form-input" id="at_st"><option>出勤</option><option>请假</option><option>缺勤</option></select></div>
+    <div class="form-item"><label>备注</label><input class="form-input" id="at_rmk"></div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeAllModal()">取消</button><button class="btn btn-primary" onclick="saveAt()">保存</button></div>
+  </div>
+</div>
+
+<div class="modal" id="puModal">
+  <div class="modal-box">
+    <div class="modal-title">违纪登记</div>
+    <div class="form-item"><label>日期</label><input class="form-input" id="pu_date" type="date"></div>
+    <div class="form-item"><label>姓名</label><input class="form-input" id="pu_name"></div>
+    <div class="form-item"><label>违纪类型</label><input class="form-input" id="pu_type" placeholder="如：迟到、打架、玩手机…"></div>
+    <div class="form-item"><label>处理备注</label><textarea class="form-input" id="pu_note" rows="3"></textarea></div>
+    <div class="form-item"><label>上传图片</label><input type="file" accept="image/*" id="pu_img" onchange="loadPuImg(event)" style="font-size:14px"><div id="pu_img_preview" style="display:none;margin-top:8px"></div><input type="hidden" id="pu_img_data"></div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeAllModal()">取消</button><button class="btn btn-primary" onclick="savePu()">保存</button></div>
+  </div>
+</div>
+
+<div class="modal" id="logModal">
+  <div class="modal-box">
+    <div class="modal-title">新增日志</div>
+    <div style="display:flex;gap:12px">
+      <div class="form-item" style="flex:1"><label>日期</label><input class="form-input" id="log_date" type="date"></div>
+      <div class="form-item" style="flex:0 0 120px"><label>时间</label><input class="form-input" id="log_time" type="time"></div>
+    </div>
+    <div class="form-item"><label>日志内容</label><textarea class="form-input" id="log_content" rows="5" placeholder="记录今天的班级情况…"></textarea></div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeAllModal()">取消</button><button class="btn btn-primary" onclick="saveLog()">保存</button></div>
+  </div>
+</div>
+
+<!-- 导师制 Modal -->
+<div class="modal" id="tutorModal">
+  <div class="modal-box">
+    <div class="modal-title">新增 / 编辑导师关系</div>
+    <div class="form-item"><label>学生姓名 *</label><input class="form-input" id="t_name" placeholder="学生姓名"></div>
+    <div class="form-item"><label>性别</label><select class="form-input" id="t_sex"><option value="">请选择</option><option>男</option><option>女</option></select></div>
+    <div class="form-item"><label>家长电话1</label><input class="form-input" id="t_tel1" placeholder="家长手机号"></div>
+    <div class="form-item"><label>家长电话2</label><input class="form-input" id="t_tel2" placeholder="家长手机号"></div>
+    <div class="form-item"><label>导师姓名 *</label><input class="form-input" id="t_tutor" placeholder="导师姓名"></div>
+    <div class="form-item"><label>导师电话</label><input class="form-input" id="t_tutorTel" placeholder="导师手机号"></div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeAllModal()">取消</button><button class="btn btn-primary" onclick="saveTutor()">保存</button></div>
+  </div>
+</div>
+
+<div class="img-viewer" id="imgModal" onclick="this.style.display='none'">
+  <img id="imgModalContent">
+</div>
+
+<script>
+// === 云端同步配置 ===
+const SYNC_URL_KEY = 'sync_server_url';
+const SYNC_KEY_KEY = 'sync_sync_key';
+const DEFAULT_SYNC_URL = 'https://celadon-tarsier-b90204.netlify.app';
+const DEFAULT_SYNC_KEY = 'class2025';
+let syncDot = null;
+let syncText = null;
+let syncInterval = null;
+let lastSyncData = '';
+let syncEnabled = false;
+
+function loadSyncConfig() {
+  // 首次使用自动写入默认值
+  if (!localStorage.getItem(SYNC_URL_KEY)) localStorage.setItem(SYNC_URL_KEY, DEFAULT_SYNC_URL);
+  if (!localStorage.getItem(SYNC_KEY_KEY)) localStorage.setItem(SYNC_KEY_KEY, DEFAULT_SYNC_KEY);
+  const url = localStorage.getItem(SYNC_URL_KEY) || '';
+  const key = localStorage.getItem(SYNC_KEY_KEY) || '';
+  // 仅在首次加载时填充输入框
+  if (!document.getElementById('syncUrl').dataset.loaded) {
+    if (document.getElementById('syncUrl')) document.getElementById('syncUrl').value = url;
+    if (document.getElementById('syncKey')) document.getElementById('syncKey').value = key;
+    document.getElementById('syncUrl').dataset.loaded = '1';
+  }
+  return { url, key };
+}
+
+function saveSyncConfig() {
+  const url = document.getElementById('syncUrl').value.trim().replace(/\/$/, '');
+  const key = document.getElementById('syncKey').value.trim();
+  localStorage.setItem(SYNC_URL_KEY, url);
+  localStorage.setItem(SYNC_KEY_KEY, key);
+  return { url, key };
+}
+
+
+
+function getSyncPayload() {
+  return JSON.stringify({
+    stu: stuArr, score: scoreArr, at: atArr, pu: puArr, log: logArr, tutor: tutorArr
+  });
+}
+
+// === 同步函数（通过 Vercel API）===
+const API_URL = 'https://class-manager-omega.vercel.app';
+const API_KEY = 'class2025';
+
+function setSyncStatus(state) {
+  if(!document.getElementById('syncDot')||!document.getElementById('syncText'))return;
+  if(state==='connected'){document.getElementById('syncDot').style.background='var(--green)';document.getElementById('syncText').textContent='已同步';}
+  else if(state==='syncing'){document.getElementById('syncDot').style.background='var(--orange)';document.getElementById('syncText').textContent='同步中…';}
+  else{document.getElementById('syncDot').style.background='var(--text4)';document.getElementById('syncText').textContent='未连接';}
+}
+
+function syncPayload(){return JSON.stringify({stu:stuArr,score:scoreArr,at:atArr,pu:puArr,log:logArr,tutor:tutorArr});}
+
+async function syncUpload() {
+  setSyncStatus('syncing');
+  try {
+    var r=await fetch(API_URL+'/api/data?key='+API_KEY,{method:'PUT',headers:{'Content-Type':'application/json'},body:syncPayload()});
+    if(r.ok){lastSyncData=syncPayload();setSyncStatus('connected');}else{setSyncStatus('disconnected');}
+  }catch(e){setSyncStatus('disconnected');}
+}
+
+async function syncDownload() {
+  setSyncStatus('syncing');
+  try {
+    var r=await fetch(API_URL+'/api/data?key='+API_KEY);
+    if(!r.ok){setSyncStatus('disconnected');return false;}
+    var data=await r.json();
+    if(!data||!data.stu){setSyncStatus('connected');return false;}
+    // 云端有数据就直接覆盖本地（确保实时同步）
+    stuArr=data.stu;localStorage.setItem(KEY_STU,JSON.stringify(data.stu));
+    scoreArr=data.score||[];localStorage.setItem(KEY_SCORE,JSON.stringify(data.score||[]));
+    atArr=data.at||[];localStorage.setItem(KEY_AT,JSON.stringify(data.at||[]));
+    puArr=data.pu||[];localStorage.setItem(KEY_PU,JSON.stringify(data.pu||[]));
+    logArr=data.log||[];localStorage.setItem(KEY_LOG,JSON.stringify(data.log||[]));
+    tutorArr=data.tutor||[];localStorage.setItem(KEY_TUTOR,JSON.stringify(data.tutor||[]));
+    setSyncStatus('connected');refreshAll();return true;
+  }catch(e){setSyncStatus('disconnected');return false;}
+}
+
+async function syncTest() {
+  setSyncStatus('syncing');
+  try{var r=await fetch(API_URL+'/api/health');if(r.ok){setSyncStatus('connected');alert('连接成功！');return;}}catch(e){}
+  setSyncStatus('disconnected');alert('无法连接服务器');
+}
+
+function startSyncPolling() {
+  if(syncInterval)clearInterval(syncInterval);
+  syncInterval=setInterval(function(){syncDownload().catch(function(){});},1000);
+}
+
+const KEY_STU="stuData",KEY_SCORE="scoreData",KEY_AT="attendData",KEY_PU="punishData",KEY_LOG="logData",KEY_TUTOR="tutorData";
+const initStuData=[
+  {idCard:"321183201007304852",name:"王宇轩",sex:"男",tel:"15996821088",address:"御东国际79幢801室"},{idCard:"321183200912242968",name:"王安冉",sex:"女",tel:"18951905061",address:"新城樾府14幢606"},{idCard:"321183200909173850",name:"王苏豪",sex:"男",tel:"13186493552",address:"江家庄86号"},{idCard:"320382201007160100",name:"王欣欣",sex:"女",tel:"13775396790",address:"江苏省句容市江南世家5栋2901"},{idCard:"321183200912230035",name:"包智翔",sex:"男",tel:"13815160730",address:"凌家园20号603"},{idCard:"321183201002184839",name:"吕凯文",sex:"男",tel:"17705298560",address:"江苏省句容市北部新城西区4栋1单元"},{idCard:"321183201005184818",name:"吕洲",sex:"男",tel:"13952967259",address:"句容市香溪湾E9幢2204"},{idCard:"321183200910220044",name:"吕煜蕾",sex:"女",tel:"15651281970",address:"芳邻雅居11栋1单元302"},{idCard:"321183200910313611",name:"朱宏文",sex:"男",tel:"13815162002",address:"中央美地8栋一单元701室"},{idCard:"321183201004120820",name:"朱紫萱",sex:"女",tel:"13913400655",address:"黄金花园73栋206"},{idCard:"321202201002180122",name:"朱嘉仪",sex:"女",tel:"15605283957",address:"中央美地8栋1单元1101"},{idCard:"321183200910230824",name:"任佳艳",sex:"女",tel:"18852846081",address:"锦绣句容东四栋二单元904"},{idCard:"321183200911100036",name:"刘雨昊",sex:"男",tel:"18952872118",address:"华阳街道吉里村126号"},{idCard:"321183201003030815",name:"许子言",sex:"男",tel:"13357778108",address:"公园道C05幢2702"},{idCard:"321183200910092927",name:"纪吴仪",sex:"女",tel:"13952969630",address:"御东国际73幢1704"},{idCard:"321183200910075588",name:"严雨萱",sex:"女",tel:"18952939343",address:"文昌雅苑2栋2单元1407室"},{idCard:"620825200911252501",name:"李紫涵",sex:"女",tel:"15097086920",address:"宝华花园45栋一单元"},{idCard:"320705200909263525",name:"吴子晗",sex:"女",tel:"18114461114",address:"碧桂园临湖苑8栋2001"},{idCard:"371725201008303032",name:"邱守诺",sex:"男",tel:"13921555200",address:"黄金花园东46栋3单元305"},{idCard:"321183201007266219",name:"张启阳",sex:"男",tel:"13305299749",address:"维也纳花园D11幢903"},{idCard:"321183201003050832",name:"张俣航",sex:"男",tel:"15722841985",address:"句容市华阳北路典雅居1栋406室"},{idCard:"32118320100801382X",name:"张梦璇",sex:"女",tel:"15802187615",address:"公园尚城18幢"},{idCard:"321183201005280033",name:"张铭泽",sex:"男",tel:"18852883338",address:"碧桂园中央公园"},{idCard:"32118320100613488X",name:"陈亦可",sex:"女",tel:"13775397037",address:"江苏省句容市城市峰境6栋东单元1101"},{idCard:"321183201007220819",name:"陈际舟",sex:"男",tel:"13914596203",address:"江苏省句容市梧桐墅20幢1单元302"},{idCard:"321183201003300045",name:"陈瑞可",sex:"女",tel:"13912107137",address:"晨钟艺境6单元"},{idCard:"321183200909163820",name:"赵丝格",sex:"女",tel:"13376190957",address:"御栋国际75栋"},{idCard:"321183201006085643",name:"赵许琪",sex:"女",tel:"18952996810",address:"太阳星城8栋102"},{idCard:"320115200909023126",name:"胡佳馨",sex:"女",tel:"18252593779",address:"句容市世茂花园26栋301室"},{idCard:"321183201008305582",name:"秦诗涵",sex:"女",tel:"13451963520",address:"文化新村10栋"},{idCard:"340223201005282540",name:"袁雨霏",sex:"女",tel:"13585957262",address:"嘉烨御花园25幢3001"},{idCard:"321183201008064862",name:"徐文萱",sex:"女",tel:"",address:"世茂花园B6幢一单元803"},{idCard:"32118320100819486X",name:"郭玥橦",sex:"女",tel:"13775393612",address:"开发区西苑新村2巷45号"},{idCard:"321183201001193864",name:"黄子涵",sex:"女",tel:"13952991698",address:"金润香江丽景礼宾府702室"},{idCard:"321183200910244820",name:"曹秋瑾",sex:"女",tel:"13775528692",address:"维也纳花园D11栋306"},{idCard:"32118320100127551X",name:"章何弈",sex:"男",tel:"",address:"商业街栖风苑3幢303"},{idCard:"321183200910213610",name:"葛立文",sex:"男",tel:"13921558759",address:"句容市御东国际6期81栋504室"},{idCard:"321183201005062028",name:"韩珂馨",sex:"女",tel:"15652826509",address:"碧桂园柏悦华府"},{idCard:"321183201002142014",name:"韩寅",sex:"男",tel:"13921554808",address:"通宁公寓20幢2单元103"},{idCard:"32118320090926084X",name:"焦子萱",sex:"女",tel:"15189145967",address:"台北上上城11幢402室"},{idCard:"340823201008240218",name:"路永延",sex:"男",tel:"15805160571",address:"玲珑越13栋"},{idCard:"321183201001115524",name:"雍涵茜",sex:"女",tel:"18952968659",address:"句容市润景美邻苑28栋204室"},{idCard:"321183201001033828",name:"管欣然",sex:"女",tel:"15996826250",address:"御东国际三期66幢一单元502室"},{idCard:"321183201003034824",name:"滕欣然",sex:"女",tel:"13645295694",address:"句容第二中学边小院1单元301"},{idCard:"321183201001072413",name:"潘智宸",sex:"男",tel:"13625264438",address:"葛仙小区6栋205"},{idCard:"32118320100111082X",name:"薛梦瑶",sex:"女",tel:"13862436109",address:"花语墅17栋1507"},{idCard:"321183200710040000",name:"江文槿",sex:"女",tel:"",address:""}
+];
+const initScoreData=[
+  {exam:"2026年5月联考",name:"吴子晗",idCard:"320705200909263525",yw:100,sx:97,yy:121,ls:82,zz:77,dl:59,total:536},{exam:"2026年5月联考",name:"朱嘉仪",idCard:"321202201002180122",yw:104,sx:96,yy:83,ls:73,zz:80,dl:89,total:525},{exam:"2026年5月联考",name:"郭玥橦",idCard:"32118320100819486X",yw:112,sx:95,yy:91,ls:71,zz:63,dl:74,total:506},{exam:"2026年5月联考",name:"王欣欣",idCard:"320382201007160100",yw:100,sx:80,yy:89.5,ls:83,zz:70,dl:83,total:505.5},{exam:"2026年5月联考",name:"滕欣然",idCard:"321183201003034824",yw:105,sx:104,yy:75,ls:75,zz:69,dl:77,total:505},{exam:"2026年5月联考",name:"曹秋瑾",idCard:"321183200910244820",yw:106,sx:84,yy:87,ls:73,zz:80,dl:74,total:504},{exam:"2026年5月联考",name:"赵丝格",idCard:"321183200909163820",yw:111,sx:98,yy:83,ls:67,zz:67,dl:74,total:500},{exam:"2026年5月联考",name:"陈亦可",idCard:"32118320100613488X",yw:109,sx:105,yy:77.5,ls:64,zz:65,dl:77,total:497.5},{exam:"2026年5月联考",name:"严雨萱",idCard:"321183200910075588",yw:115,sx:78,yy:94.5,ls:62,zz:67,dl:80,total:496.5},{exam:"2026年5月联考",name:"陈瑞可",idCard:"321183201003300045",yw:109,sx:81,yy:104,ls:63,zz:74,dl:59,total:490},{exam:"2026年5月联考",name:"张俣航",idCard:"321183201003050832",yw:86,sx:91,yy:104,ls:66,zz:61,dl:71,total:479},{exam:"2026年5月联考",name:"纪吴仪",idCard:"321183200910092927",yw:109,sx:75,yy:102,ls:55,zz:67,dl:69,total:477},{exam:"2026年5月联考",name:"徐文萱",idCard:"321183201008064862",yw:105,sx:60,yy:91.5,ls:65,zz:70,dl:77,total:468.5},{exam:"2026年5月联考",name:"陈际舟",idCard:"321183201007220819",yw:87,sx:99,yy:70,ls:67,zz:70,dl:71,total:464},{exam:"2026年5月联考",name:"袁雨霏",idCard:"340223201005282540",yw:104,sx:82,yy:97,ls:56,zz:64,dl:61,total:464},{exam:"2026年5月联考",name:"路永延",idCard:"340823201008240218",yw:100,sx:69,yy:100.5,ls:72,zz:58,dl:61,total:460.5},{exam:"2026年5月联考",name:"焦子萱",idCard:"32118320090926084X",yw:102,sx:79,yy:93.5,ls:66,zz:59,dl:59,total:458.5},{exam:"2026年5月联考",name:"吕煜蕾",idCard:"321183200910220044",yw:97,sx:62,yy:108.5,ls:59,zz:66,dl:66,total:458.5},{exam:"2026年5月联考",name:"雍涵茜",idCard:"321183201001115524",yw:95,sx:86,yy:90.5,ls:69,zz:49,dl:66,total:455.5},{exam:"2026年5月联考",name:"王苏豪",idCard:"321183200909173850",yw:98,sx:90,yy:86.5,ls:69,zz:44,dl:66,total:453.5},{exam:"2026年5月联考",name:"韩珂馨",idCard:"321183201005062028",yw:90,sx:83,yy:92,ls:64,zz:47,dl:77,total:453},{exam:"2026年5月联考",name:"任佳艳",idCard:"321183200910230824",yw:98,sx:89,yy:82.5,ls:52,zz:62,dl:61,total:444.5},{exam:"2026年5月联考",name:"包智翔",idCard:"321183200912230035",yw:94,sx:89,yy:64,ls:66,zz:56,dl:71,total:440},{exam:"2026年5月联考",name:"朱紫萱",idCard:"321183201004120820",yw:104,sx:61,yy:84,ls:63,zz:56,dl:71,total:439},{exam:"2026年5月联考",name:"葛立文",idCard:"321183200910213610",yw:98,sx:83,yy:54,ls:68,zz:57,dl:77,total:437},{exam:"2026年5月联考",name:"朱宏文",idCard:"321183200910313611",yw:107,sx:64,yy:81,ls:70,zz:69,dl:45,total:436},{exam:"2026年5月联考",name:"胡佳馨",idCard:"320115200909023126",yw:93,sx:76,yy:82,ls:57,zz:62,dl:64,total:434},{exam:"2026年5月联考",name:"李紫涵",idCard:"620825200911252501",yw:106,sx:47,yy:73.5,ls:70,zz:65,dl:71,total:432.5},{exam:"2026年5月联考",name:"张启阳",idCard:"321183201007266219",yw:99,sx:58,yy:72,ls:70,zz:62,dl:71,total:432},{exam:"2026年5月联考",name:"吕洲",idCard:"321183201005184818",yw:85,sx:69,yy:95.5,ls:59,zz:58,dl:59,total:425.5},{exam:"2026年5月联考",name:"黄子涵",idCard:"321183201001193864",yw:90,sx:60,yy:84.5,ls:55,zz:58,dl:74,total:421.5},{exam:"2026年5月联考",name:"管欣然",idCard:"321183201001033828",yw:100,sx:44,yy:86.5,ls:62,zz:70,dl:56,total:418.5},{exam:"2026年5月联考",name:"刘雨昊",idCard:"321183200911100036",yw:107,sx:48,yy:82.5,ls:70,zz:48,dl:56,total:411.5},{exam:"2026年5月联考",name:"吕凯文",idCard:"321183201002184839",yw:90,sx:67,yy:68,ls:60,zz:55,dl:64,total:404},{exam:"2026年5月联考",name:"王宇轩",idCard:"321183201007304852",yw:96,sx:55,yy:70,ls:73,zz:45,dl:64,total:403},{exam:"2026年5月联考",name:"章何弈",idCard:"32118320100127551X",yw:92,sx:45,yy:70,ls:67,zz:51,dl:53,total:378},{exam:"2026年5月联考",name:"张铭泽",idCard:"321183201005280033",yw:91,sx:19,yy:84.5,ls:61,zz:49,dl:61,total:365.5},{exam:"2026年5月联考",name:"许子言",idCard:"321183201003030815",yw:87,sx:35,yy:72.5,ls:71,zz:30,dl:45,total:340.5},{exam:"2026年5月联考",name:"王安冉",idCard:"321183200912242968",yw:85,sx:4,yy:46,ls:64,zz:44,dl:66,total:309},{exam:"2026年5月联考",name:"潘智宸",idCard:"321183201001072413",yw:24,sx:82,yy:53,ls:33,zz:48,dl:0,total:240},{exam:"2026年5月联考",name:"邱守诺",idCard:"371725201008303032",yw:69,sx:0,yy:0,ls:0,zz:0,dl:0,total:69}
+];
+if(localStorage.getItem('stuData_v')!=='v3'){localStorage.removeItem(KEY_STU);localStorage.setItem('stuData_v','v3');}
+if(localStorage.getItem('scoreData_v')!=='v1'){localStorage.setItem(KEY_SCORE,JSON.stringify(initScoreData));localStorage.setItem('scoreData_v','v1');}
+if(!localStorage.getItem(KEY_STU))localStorage.setItem(KEY_STU,JSON.stringify(initStuData));
+let stuArr=JSON.parse(localStorage.getItem(KEY_STU))||initStuData;
+// 恢复丢失的学生数据
+if(stuArr.length<initStuData.length){stuArr=initStuData.map(function(x){return JSON.parse(JSON.stringify(x));});localStorage.setItem(KEY_STU,JSON.stringify(stuArr));}
+let scoreArr=JSON.parse(localStorage.getItem(KEY_SCORE))||initScoreData;
+// 数据补充/重命名函数（在同步后调用）
+function ensureLocalScores(){
+  // 恢复丢失的学生数据（如果少于45人说明被覆盖了）
+  var s2=JSON.parse(localStorage.getItem(KEY_STU))||[];if(s2.length<45){localStorage.setItem(KEY_STU,JSON.stringify(initStuData));stuArr=JSON.parse(JSON.stringify(initStuData));}
+  var s=JSON.parse(localStorage.getItem(KEY_SCORE))||[];
+  s.forEach(function(x){if(x.exam==='2026四月联考'||x.exam==='2026年4月联考'||x.exam==='2026年期中考试')x.exam='2026期中考试';});
+  var seen={};s=s.filter(function(x){var k=x.exam+'_'+x.name;if(seen[k])return false;seen[k]=true;return true;});
+  if(!s.some(function(x){return x.exam==='2026期中考试';})){[['韩珂馨',97,107,105.5,57,47,80,493.5],['包智翔',102,90,88,79,56,77,492],['陈瑞可',100,74,117,79,59,61,490],['雍涵茜',103,82,107,74,53,69,488],['严雨萱',109,67,106,74,69,59,484],['郭玥橦',113,61,115,72,66,56,483],['赵丝格',110,67,96,75,63,71,482],['滕欣然',102,86,89.5,74,65,61,477.5],['王欣欣',104,65,101,70,68,66,474],['葛立文',90,87,77,72,56,91,473],['袁雨霏',96,64,109,75,59,69,472],['纪吴仪',104,58,105,74,63,64,468],['朱宏文',103,71,87.5,71,61,74,467.5],['张俣航',104,52,112,67,61,69,465],['陈亦可',102,76,95.5,67,57,66,463.5],['吴子晗',100,49,115.5,69,57,71,461.5],['朱嘉仪',89,64,106.5,71,61,67,458.5],['焦子萱',104,74,96.5,66,62,53,455.5],['曹秋瑾',105,47,91.5,71,63,74,451.5],['管欣然',101,51,98.5,61,68,71,450.5]].forEach(function(r){s.push({exam:'2026期中考试',name:r[0],yw:r[1],sx:r[2],yy:r[3],zz:r[4],ls:r[5],dl:r[6],total:r[7]});});}
+  if(!s.some(function(x){return x.exam==='2026上学期期末考';})){[['王宇轩',88,61.5,69.5,76,61,52,408],['王安冉',97.5,16.5,47,72,33,44,310],['王苏豪',94.5,86,97,82,51.5,44,455],['王欣欣',96,74.5,104,73.5,62,55,465],['包智翔',97.5,69.5,46,65,68,53,399],['吕凯文',101,38.5,70,72.5,49,62,393],['吕洲',91,64,103.5,75,50,54,437.5],['吕煜蕾',89.5,54,110,66,45,54,418.5],['朱宏文',96.5,54,97.5,71,38,43,400],['朱嘉仪',98,69,109.5,86,62,52,476.5],['任佳艳',95.5,69.5,85,61,51,50,412],['刘雨昊',103.5,64,87.5,75,58,59,447],['许子言',95,51,61,66,23,33,329],['纪吴仪',89,44,130,51,55.5,52,421.5],['严雨萱',104.25,38,117,78,71,59,467.25],['李紫涵',94.5,44,69,52,42,40,341.5],['吴子晗',100,34.5,123,67,59.5,52,436],['邱守诺',94,41,44.5,69.5,52,52,353],['张启阳',105.5,63.5,95,87,69.5,68,488.5],['张俣航',99.5,70,113,75.5,49,35,442],['张铭泽',95.5,23.5,102,60,53,43,377],['陈亦可',106,95.5,91,78,58,56,484.5],['陈际舟',89,76,83.5,73,63,35,419.5],['陈瑞可',96,50.5,129,71,62,50,458.5],['赵丝格',106,61,104,72.5,54.5,59,457],['胡佳馨',89.5,43,111,56,53,44,396.5],['袁雨霏',93,72,111.5,64,59,50,449.5],['徐文萱',111,52,97,77,52,46,435],['郭玥橦',98.5,59.5,104.5,68,49,50,429.5],['黄子涵',103,75.5,113,67,48,48,454.5],['曹秋瑾',107.5,61.5,113,79,57,49,467],['章何弈',94,47,67.5,76,58,47,389.5],['葛立文',95,88.5,94.5,74,56.5,63,471.5],['韩珂馨',88,77.5,121,71.5,52,60,470],['韩寅',92.5,61.5,102.5,51,38,35,380.5],['焦子萱',96.5,24,110.5,71,55.5,45,402.5],['路永延',102,61.5,106,74.5,49,56,449],['雍涵茜',103.5,44.5,90,65,50.5,63,416.5],['管欣然',102.5,38,96,70,42,42,390.5],['滕欣然',91.5,75.5,79.5,82,60,50,438.5],['潘智宸',85.5,17,88,81,31,40,342.5]].forEach(function(r){s.push({exam:'2026上学期期末考',name:r[0],yw:r[1],sx:r[2],yy:r[3],ls:r[4],zz:r[5],dl:r[6],total:r[7]});});}
+  localStorage.setItem(KEY_SCORE,JSON.stringify(s));scoreArr=s;
+}
+let atArr=JSON.parse(localStorage.getItem(KEY_AT))||[];
+let puArr=JSON.parse(localStorage.getItem(KEY_PU))||[];
+let logArr=JSON.parse(localStorage.getItem(KEY_LOG))||[];
+let tutorArr=JSON.parse(localStorage.getItem(KEY_TUTOR))||[];
+let atEditIdx=null,puEditIdx=null,logEditIdx=null;
+setInterval(()=>{document.getElementById("nowTime").textContent=new Date().toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});},1000);
+function downloadBackup(){const data={stu:stuArr,score:scoreArr,at:atArr,pu:puArr,log:logArr,tutor:tutorArr};const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);const d=new Date();a.download=`班级数据备份_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.json`;a.click();alert("备份文件已下载，请保存到 D:\\学生管理系统 文件夹中");}
+function restoreBackup(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(ev){try{const d=JSON.parse(ev.target.result);if(d.stu){stuArr=d.stu;localStorage.setItem(KEY_STU,JSON.stringify(d.stu));}if(d.score){scoreArr=d.score;localStorage.setItem(KEY_SCORE,JSON.stringify(d.score));}if(d.at){atArr=d.at;localStorage.setItem(KEY_AT,JSON.stringify(d.at));}if(d.pu){puArr=d.pu;localStorage.setItem(KEY_PU,JSON.stringify(d.pu));}if(d.log){logArr=d.log;localStorage.setItem(KEY_LOG,JSON.stringify(d.log));}if(d.tutor){tutorArr=d.tutor;localStorage.setItem(KEY_TUTOR,JSON.stringify(d.tutor));}refreshAll();alert("数据恢复成功！");syncUpload();}catch(err){alert("文件格式错误");}};reader.readAsText(file);e.target.value="";}
+function switchPage(p){document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));document.getElementById(p).classList.add("active");document.querySelectorAll(".menu-item").forEach(m=>m.classList.remove("active"));const el=document.querySelector(`.menu-item[onclick*="'${p}'"]`);if(el)el.classList.add("active");refreshAll();}
+function closeAllModal(){document.querySelectorAll(".modal").forEach(m=>m.style.display="none");atEditIdx=null;puEditIdx=null;logEditIdx=null;tutorEditIdx=null;}
+document.querySelectorAll(".modal").forEach(m=>{m.addEventListener("click",e=>{if(e.target===m)closeAllModal();});});
+// 小屏下点击侧边栏菜单自动关闭侧边栏，改善交互
+document.querySelectorAll('.menu-item').forEach(mi=>{mi.addEventListener('click',()=>{ if(window.innerWidth<=960) toggleSidebar(false); });});
+function initExamSelector(){const s=document.getElementById("sc_exam_selector");const cur=s.value;if(!scoreArr||!scoreArr.length)return;
+// 完全重建选项
+var exams=[],seen={};scoreArr.forEach(function(x){if(!seen[x.exam]){seen[x.exam]=true;exams.push(x.exam);}});
+s.innerHTML='';exams.forEach(function(n){var o=document.createElement("option");o.value=n;o.textContent=n;s.appendChild(o);});
+if(s.options.length){var idx=0;for(var i=0;i<s.options.length;i++){if(s.options[i].value===cur){idx=i;break;}}s.selectedIndex=idx;}}
+function switchExam(){refreshAll();}
+function addExam(){const n=prompt("输入新考试名称：");if(!n)return;const s=document.getElementById("sc_exam_selector"),o=document.createElement("option");o.value=n;o.textContent=n;s.appendChild(o);s.value=n;}
+function openStuModal(){document.getElementById("stuModal").style.display="flex";["s_name","s_sex","s_idCard","s_tel","s_tel2","s_address"].forEach(id=>document.getElementById(id).value="");}
+function saveStu(){const d={name:document.getElementById("s_name").value.trim(),sex:document.getElementById("s_sex").value.trim(),idCard:document.getElementById("s_idCard").value.trim(),tel:document.getElementById("s_tel").value.trim(),tel2:document.getElementById("s_tel2").value.trim(),address:document.getElementById("s_address").value.trim()};if(!d.idCard||!d.name)return alert("姓名和身份证号不能为空");if(d.idCard.length!==18)return alert("身份证号必须为18位");const idx=stuArr.findIndex(x=>x.idCard===d.idCard);if(idx>=0){if(!confirm(`学生「${d.name}」已存在，是否覆盖？`))return;stuArr[idx]=d;}else stuArr.push(d);localStorage.setItem(KEY_STU,JSON.stringify(stuArr));closeAllModal();refreshAll();syncUpload();}
+function renderStu(list){const arr=list||stuArr;document.getElementById("stuTable").innerHTML=arr.map(s=>`<tr><td><strong>${s.name}</strong></td><td>${s.sex?`<span class="badge ${s.sex==='男'?'badge-blue':'badge-orange'}">${s.sex}</span>`:"-"}</td><td style="font-family:'SF Mono',Menlo,monospace;font-size:13px;letter-spacing:0.3px">${s.idCard}</td><td>${s.tel||"-"}</td><td>${s.tel2||"-"}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">${s.address||"-"}</td><td><button class="btn btn-ghost" onclick="editStu('${s.idCard}')" style="padding:3px 12px;font-size:12px">修改</button><button class="btn btn-danger" onclick="delStu('${s.idCard}')" style="padding:3px 12px;font-size:12px">删除</button></td></tr>`).join("")||'<tr><td colspan="7"><div class="empty-state">暂无学生数据</div></td></tr>';}
+function editStu(id){const s=stuArr.find(x=>x.idCard===id);if(!s)return;document.getElementById("s_name").value=s.name;document.getElementById("s_sex").value=s.sex||"";document.getElementById("s_idCard").value=s.idCard;document.getElementById("s_tel").value=s.tel||"";document.getElementById("s_tel2").value=s.tel2||"";document.getElementById("s_address").value=s.address||"";document.getElementById("stuModal").style.display="flex";}
+function delStu(id){const s=stuArr.find(x=>x.idCard===id);if(!s||!confirm(`确定删除学生「${s.name}」？`))return;stuArr=stuArr.filter(x=>x.idCard!==id);localStorage.setItem(KEY_STU,JSON.stringify(stuArr));refreshAll();syncUpload();}
+function searchStu(){const k=document.getElementById("stuSearch").value.trim().toLowerCase();renderStu(k?stuArr.filter(s=>s.name.includes(k)||s.idCard.includes(k)||(s.tel&&s.tel.includes(k))||(s.tel2&&s.tel2.includes(k))||(s.address&&s.address.includes(k))):null);}
+function openScModal(){const selMo=document.getElementById("sc_exam"),cur=document.getElementById("sc_exam_selector").value;let f=false;for(let i=0;i<selMo.options.length;i++){if(selMo.options[i].value===cur){selMo.selectedIndex=i;f=true;break;}}if(!f){const o=document.createElement("option");o.value=cur;o.textContent=cur;selMo.appendChild(o);selMo.value=cur;}document.getElementById("scModal").style.display="flex";["sc_name","sc_yw","sc_sx","sc_yy","sc_ls","sc_zz","sc_dl"].forEach(id=>document.getElementById(id).value="");}
+function saveSc(){const exam=document.getElementById("sc_exam").value,name=document.getElementById("sc_name").value.trim();if(!name)return alert("姓名不能为空");const yw=+document.getElementById("sc_yw").value||0,sx=+document.getElementById("sc_sx").value||0,yy=+document.getElementById("sc_yy").value||0,ls=+document.getElementById("sc_ls").value||0,zz=+document.getElementById("sc_zz").value||0,dl=+document.getElementById("sc_dl").value||0,total=yw+sx+yy+ls+zz+dl;const idx=scoreArr.findIndex(x=>x.exam===exam&&x.name===name);if(idx>=0)scoreArr[idx]={exam,name,idCard:scoreArr[idx].idCard,yw,sx,yy,ls,zz,dl,total};else{const stu=stuArr.find(x=>x.name===name);scoreArr.push({exam,name,idCard:stu?stu.idCard:"",yw,sx,yy,ls,zz,dl,total});}localStorage.setItem(KEY_SCORE,JSON.stringify(scoreArr));closeAllModal();refreshAll();syncUpload();}
+function renderSc(list){const exam=document.getElementById("sc_exam_selector").value,arr=(list||scoreArr.filter(x=>x.exam===exam)).sort((a,b)=>b.total-a.total);document.getElementById("scTable").innerHTML=arr.map((s,i)=>{const r=`<span style="color:var(--text3)">${i+1}</span>`;return `<tr><td style="text-align:center">${r}</td><td><strong>${s.name}</strong></td><td>${s.yw}</td><td>${s.sx}</td><td>${s.yy}</td><td>${s.ls}</td><td>${s.zz}</td><td>${s.dl}</td><td style="font-weight:700">${s.total}</td><td><button class="btn btn-ghost" onclick="editSc('${s.name}')" style="padding:3px 12px;font-size:12px">修改</button></td></tr>`;}).join("")||'<tr><td colspan="10"><div class="empty-state">暂无成绩数据</div></td></tr>';}
+function editSc(n){const exam=document.getElementById("sc_exam_selector").value,s=scoreArr.find(x=>x.name===n&&x.exam===exam);if(!s)return alert("未找到该记录");document.getElementById("sc_exam").value=exam;document.getElementById("sc_name").value=s.name;document.getElementById("sc_yw").value=s.yw;document.getElementById("sc_sx").value=s.sx;document.getElementById("sc_yy").value=s.yy;document.getElementById("sc_ls").value=s.ls||0;document.getElementById("sc_zz").value=s.zz||0;document.getElementById("sc_dl").value=s.dl||0;document.getElementById("scModal").style.display="flex";}
+function searchSc(){const k=document.getElementById("scSearch").value.trim(),e=document.getElementById("sc_exam_selector").value;renderSc(k?scoreArr.filter(x=>x.exam===e&&x.name.includes(k)):null);}
+function openAtModal(){document.getElementById("atModal").style.display="flex";const d=new Date().toISOString().split("T")[0];document.getElementById("at_date").value=d;document.getElementById("at_date_picker").value=d;document.getElementById("at_name").value="";document.getElementById("at_idCard").value="";document.getElementById("at_st").value="出勤";document.getElementById("at_rmk").value="";atEditIdx=null;}
+function saveAt(){const d={date:document.getElementById("at_date").value,name:document.getElementById("at_name").value.trim(),idCard:document.getElementById("at_idCard").value.trim(),status:document.getElementById("at_st").value,remark:document.getElementById("at_rmk").value.trim()};if(!d.date||!d.name)return alert("日期和姓名不能为空");if(atEditIdx!==null)atArr[atEditIdx]=d;else atArr.push(d);localStorage.setItem(KEY_AT,JSON.stringify(atArr));closeAllModal();refreshAll();syncUpload();}
+function loadDailyAt(){let d=document.getElementById("at_date_picker").value;if(!d)d=new Date().toISOString().split("T")[0];document.getElementById("at_date_picker").value=d;document.getElementById("atDailyTable").innerHTML=stuArr.map(s=>{const at=atArr.find(x=>x.idCard===s.idCard&&x.date===d);return `<tr><td><strong>${s.name}</strong></td><td>${s.sex?`<span class="badge ${s.sex==='男'?'badge-blue':'badge-orange'}">${s.sex}</span>`:"-"}</td><td style="font-family:'SF Mono',Menlo,monospace;font-size:13px">${s.idCard}</td><td><select class="form-input at-status" data-idcard="${s.idCard}" style="width:120px;padding:6px 10px"><option value="">—</option><option value="出勤" ${at?.status==="出勤"?"selected":""}>出勤</option><option value="请假" ${at?.status==="请假"?"selected":""}>请假</option><option value="缺勤" ${at?.status==="缺勤"?"selected":""}>缺勤</option></select></td><td><input class="form-input at-remark" data-idcard="${s.idCard}" value="${at?.remark||""}" style="padding:6px 10px"></td></tr>`;}).join("");renderAt();}
+function setAllAt(){document.querySelectorAll(".at-status").forEach(s=>s.value="出勤");}
+function saveDailyAt(){const d=document.getElementById("at_date_picker").value;if(!d)return alert("请先选择日期");document.querySelectorAll(".at-status").forEach(sel=>{const id=sel.dataset.idcard,st=sel.value,rm=document.querySelector(`.at-remark[data-idcard="${id}"]`),rk=rm?rm.value:"",idx=atArr.findIndex(x=>x.idCard===id&&x.date===d);if(idx!==-1)atArr.splice(idx,1);if(st){const s=stuArr.find(x=>x.idCard===id);atArr.push({date:d,name:s?s.name:"",idCard:id,status:st,remark:rk});}});localStorage.setItem(KEY_AT,JSON.stringify(atArr));loadDailyAt();refreshAll();syncUpload();}
+function renderAt(){const b={"出勤":"badge-green","请假":"badge-orange","缺勤":"badge-red"};document.getElementById("atTable").innerHTML=atArr.map((i,idx)=>`<tr><td>${i.date}</td><td><strong>${i.name}</strong></td><td style="font-family:'SF Mono',Menlo,monospace;font-size:13px">${i.idCard}</td><td><span class="badge ${b[i.status]||''}">${i.status}</span></td><td>${i.remark||"-"}</td><td><button class="btn btn-ghost" onclick="editAt(${idx})" style="padding:3px 12px;font-size:12px">修改</button><button class="btn btn-danger" onclick="delAt(${idx})" style="padding:3px 12px;font-size:12px">删除</button></td></tr>`).join("")||'<tr><td colspan="6"><div class="empty-state">暂无考勤记录</div></td></tr>';}
+function editAt(idx){const s=atArr[idx];document.getElementById("at_date").value=s.date;document.getElementById("at_name").value=s.name;document.getElementById("at_idCard").value=s.idCard;document.getElementById("at_st").value=s.status;document.getElementById("at_rmk").value=s.remark||"";atEditIdx=idx;document.getElementById("atModal").style.display="flex";}
+function delAt(idx){if(!confirm("确定删除该考勤记录？"))return;atArr.splice(idx,1);localStorage.setItem(KEY_AT,JSON.stringify(atArr));refreshAll();syncUpload();}
+function openPuModal(){document.getElementById("puModal").style.display="flex";document.getElementById("pu_date").value=new Date().toISOString().split("T")[0];document.getElementById("pu_name").value="";document.getElementById("pu_type").value="";document.getElementById("pu_note").value="";document.getElementById("pu_img_data").value="";document.getElementById("pu_img_preview").style.display="none";document.getElementById("pu_img_preview").innerHTML="";document.getElementById("pu_img").value="";puEditIdx=null;}
+function loadPuImg(e){const f=e.target.files[0];if(!f||f.size>5*1024*1024)return alert("图片超过 5MB");const r=new FileReader();r.onload=ev=>{document.getElementById("pu_img_data").value=ev.target.result;document.getElementById("pu_img_preview").innerHTML=`<img src="${ev.target.result}" style="max-width:200px;max-height:120px;border-radius:8px;margin-top:4px;box-shadow:0 2px 8px rgba(0,0,0,0.1)">`;document.getElementById("pu_img_preview").style.display="block";};r.readAsDataURL(f);}
+function savePu(){const d={date:document.getElementById("pu_date").value,name:document.getElementById("pu_name").value.trim(),type:document.getElementById("pu_type").value.trim(),note:document.getElementById("pu_note").value.trim(),img:document.getElementById("pu_img_data").value};if(!d.date||!d.name)return alert("日期和姓名不能为空");if(puEditIdx!==null)puArr[puEditIdx]=d;else puArr.push(d);localStorage.setItem(KEY_PU,JSON.stringify(puArr));closeAllModal();refreshAll();syncUpload();}
+function renderPu(){document.getElementById("puTable").innerHTML=puArr.map((i,idx)=>`<tr><td>${i.date}</td><td><strong>${i.name}</strong></td><td><span class="badge badge-red">${i.type}</span></td><td>${i.note||"-"}</td><td>${i.img?`<img src="${i.img}" style="width:60px;height:40px;object-fit:cover;border-radius:6px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.1)" onclick="viewPuImg('${i.img}')">`:"-"}</td><td><button class="btn btn-ghost" onclick="editPu(${idx})" style="padding:3px 12px;font-size:12px">修改</button><button class="btn btn-danger" onclick="delPu(${idx})" style="padding:3px 12px;font-size:12px">删除</button></td></tr>`).join("")||'<tr><td colspan="6"><div class="empty-state">暂无违纪记录</div></td></tr>';}
+function editPu(idx){const s=puArr[idx];document.getElementById("pu_date").value=s.date;document.getElementById("pu_name").value=s.name;document.getElementById("pu_type").value=s.type;document.getElementById("pu_note").value=s.note||"";const pre=document.getElementById("pu_img_preview"),img=document.getElementById("pu_img_data");if(s.img){img.value=s.img;pre.innerHTML=`<img src="${s.img}" style="max-width:200px;max-height:120px;border-radius:8px;margin-top:4px;box-shadow:0 2px 8px rgba(0,0,0,0.1)"><div style="font-size:12px;color:var(--text3);margin-top:4px">已上传图片</div>`;pre.style.display="block";}else{img.value="";pre.innerHTML="";pre.style.display="none";}puEditIdx=idx;}
+function delPu(idx){if(!confirm("确定删除该违纪记录？"))return;puArr.splice(idx,1);localStorage.setItem(KEY_PU,JSON.stringify(puArr));refreshAll();syncUpload();}
+function viewPuImg(src){document.getElementById("imgModalContent").src=src;document.getElementById("imgModal").style.display="flex";}
+function openLogModal(){document.getElementById("log_date").value=new Date().toISOString().split("T")[0];const n=new Date();document.getElementById("log_time").value=String(n.getHours()).padStart(2,"0")+":"+String(n.getMinutes()).padStart(2,"0");document.getElementById("log_content").value="";logEditIdx=null;document.getElementById("logModal").style.display="flex";}
+function saveLog(){const d={date:document.getElementById("log_date").value,time:document.getElementById("log_time").value,content:document.getElementById("log_content").value.trim()};if(!d.date||!d.content)return alert("日期和日志内容不能为空");if(logEditIdx!==null)logArr[logEditIdx]=d;else logArr.push(d);localStorage.setItem(KEY_LOG,JSON.stringify(logArr));closeAllModal();refreshAll();syncUpload();}
+function editLog(idx){const s=logArr[idx];document.getElementById("log_date").value=s.date;document.getElementById("log_time").value=s.time||"";document.getElementById("log_content").value=s.content;logEditIdx=idx;document.getElementById("logModal").style.display="flex";}
+function delLog(idx){if(!confirm("确定删除该日志？"))return;logArr.splice(idx,1);localStorage.setItem(KEY_LOG,JSON.stringify(logArr));refreshAll();syncUpload();}
+function renderLog(){const arr=[...logArr].reverse();if(!arr.length){document.getElementById("logTimeline").innerHTML='<div class="empty-state">还没有日志记录，点击上方「写日志」开始记录</div>';return;}let ld="",h="";arr.forEach((i,idx)=>{const ri=logArr.length-1-idx;if(i.date!==ld){if(ld)h+='</div>';h+=`<div class="timeline-day"><div class="timeline-day-label">${i.date}</div>`;ld=i.date;}h+=`<div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-body">${i.time?`<div class="timeline-time">${i.time}</div>`:""}<div class="timeline-content">${i.content}</div><div class="timeline-actions"><button class="btn btn-ghost" onclick="editLog(${ri})" style="padding:3px 12px;font-size:12px">修改</button><button class="btn btn-danger" onclick="delLog(${ri})" style="padding:3px 12px;font-size:12px">删除</button></div></div></div>`;});h+='</div>';document.getElementById("logTimeline").innerHTML=h;}
+function showExamRank(examName){const sel=document.getElementById("sc_exam_selector");if(sel){for(let i=0;i<sel.options.length;i++){if(sel.options[i].value===examName){sel.selectedIndex=i;break;}}}switchPage("score");}
+function refreshAll(){
+  initExamSelector();renderStu();renderSc();loadDailyAt();renderPu();renderLog();renderTutor();
+  document.getElementById("allStu").textContent=stuArr.length;
+  document.getElementById("examCount").textContent=[...new Set(scoreArr.map(x=>x.exam))].length;
+  document.getElementById("punishCount").textContent=puArr.length;
+  const ep=document.getElementById("examPreview");
+  if(ep){
+    if(scoreArr&&scoreArr.length){
+      var o=['2026年5月联考','2026期中考试','2026上学期期末考'];
+      var exams=o.filter(function(e){return scoreArr.some(function(x){return x.exam===e&&x.total;});});
+      if(exams.length){
+        ep.innerHTML=exams.map(function(e){
+          var s=scoreArr.filter(function(x){return x.exam===e;}).sort(function(a,b){return b.total-a.total;});
+          if(!s.length)return '';
+          var t3=s.slice(0,3),avg=(s.reduce(function(a,x){return a+x.total;},0)/s.length).toFixed(1);
+          return '<div style="margin-bottom:12px;padding:12px 16px;border-radius:10px;background:var(--surface-solid);border:0.5px solid var(--line2)"><strong>'+e+'</strong> · '+s.length+'人 · 最高'+s[0].total+'分 · 最低'+s[s.length-1].total+'分 · 平均'+avg+'分<div class="exam-top3">🏆 前三：'+t3.map(function(x){return x.name+"("+x.total+"分)";}).join(" ")+'</div><button class="btn btn-ghost" onclick="showExamRank(\''+e+'\')" style="margin-top:6px;font-size:11px">查看排名</button></div>';
+        }).join('');
+      } else {
+        ep.innerHTML='<div class="empty-state">暂无考试数据</div>';
+      }
+    } else {
+      ep.innerHTML='<div class="empty-state">暂无考试数据</div>';
+    }
+  }
+}
+function exportScores(){const exam=document.getElementById("sc_exam_selector").value,s=scoreArr.filter(x=>x.exam===exam).sort((a,b)=>b.total-a.total);if(!s.length)return alert("没有可导出的成绩");let csv="\uFEFF排名,姓名,语文,数学,英语,历史,政治,地理,总分\n";s.forEach((s,i)=>{csv+=(i+1)+","+s.name+","+s.yw+","+s.sx+","+s.yy+","+s.ls+","+s.zz+","+s.dl+","+s.total+"\n";});const b=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=exam+" 成绩.csv";a.click();}
+// 导入2026期中考试成绩
+function importAprilExam(){
+  if(scoreArr.some(x=>x.exam==="2026期中考试")&&!confirm("四月联考数据已存在，再次导入将覆盖，确定继续？"))return;
+  const data=[
+    {exam:"2026期中考试",name:"韩珂馨",yw:97,sx:107,yy:105.5,zz:57,ls:47,dl:80,total:493.5},{exam:"2026期中考试",name:"包智翔",yw:102,sx:90,yy:88,zz:79,ls:56,dl:77,total:492},{exam:"2026期中考试",name:"陈瑞可",yw:100,sx:74,yy:117,zz:79,ls:59,dl:61,total:490},{exam:"2026期中考试",name:"雍涵茜",yw:103,sx:82,yy:107,zz:74,ls:53,dl:69,total:488},{exam:"2026期中考试",name:"严雨萱",yw:109,sx:67,yy:106,zz:74,ls:69,dl:59,total:484},{exam:"2026期中考试",name:"郭玥橦",yw:113,sx:61,yy:115,zz:72,ls:66,dl:56,total:483},{exam:"2026期中考试",name:"赵丝格",yw:110,sx:67,yy:96,zz:75,ls:63,dl:71,total:482},{exam:"2026期中考试",name:"滕欣然",yw:102,sx:86,yy:89.5,zz:74,ls:65,dl:61,total:477.5},{exam:"2026期中考试",name:"王欣欣",yw:104,sx:65,yy:101,zz:70,ls:68,dl:66,total:474},{exam:"2026期中考试",name:"葛立文",yw:90,sx:87,yy:77,zz:72,ls:56,dl:91,total:473},{exam:"2026期中考试",name:"袁雨霏",yw:96,sx:64,yy:109,zz:75,ls:59,dl:69,total:472},{exam:"2026期中考试",name:"纪吴仪",yw:104,sx:58,yy:105,zz:74,ls:63,dl:64,total:468},{exam:"2026期中考试",name:"朱宏文",yw:103,sx:71,yy:87.5,zz:71,ls:61,dl:74,total:467.5},{exam:"2026期中考试",name:"张俣航",yw:104,sx:52,yy:112,zz:67,ls:61,dl:69,total:465},{exam:"2026期中考试",name:"陈亦可",yw:102,sx:76,yy:95.5,zz:67,ls:57,dl:66,total:463.5},{exam:"2026期中考试",name:"吴子晗",yw:100,sx:49,yy:115.5,zz:69,ls:57,dl:71,total:461.5},{exam:"2026期中考试",name:"朱嘉仪",yw:89,sx:64,yy:106.5,zz:71,ls:61,dl:67,total:458.5},{exam:"2026期中考试",name:"焦子萱",yw:104,sx:74,yy:96.5,zz:66,ls:62,dl:53,total:455.5},{exam:"2026期中考试",name:"曹秋瑾",yw:105,sx:47,yy:91.5,zz:71,ls:63,dl:74,total:451.5},{exam:"2026期中考试",name:"管欣然",yw:101,sx:51,yy:98.5,zz:61,ls:68,dl:71,total:450.5},{exam:"2026期中考试",name:"路永延",yw:95,sx:62,yy:101.5,zz:72,ls:52,dl:65,total:447.5},{exam:"2026期中考试",name:"徐文萱",yw:95,sx:52,yy:96,zz:59,ls:59,dl:86,total:447},{exam:"2026期中考试",name:"张启阳",yw:92,sx:47,yy:83,zz:72,ls:66,dl:86,total:446},{exam:"2026期中考试",name:"吕洲",yw:97,sx:78,yy:100.5,zz:53,ls:58,dl:59,total:445.5},{exam:"2026期中考试",name:"胡佳馨",yw:100,sx:52,yy:98,zz:65,ls:56,dl:74,total:445},{exam:"2026期中考试",name:"朱紫萱",yw:101,sx:41,yy:99,zz:79,ls:51,dl:71,total:442},{exam:"2026期中考试",name:"陈际舟",yw:83,sx:86,yy:90.5,zz:62,ls:58,dl:61,total:440.5},{exam:"2026期中考试",name:"刘雨昊",yw:102,sx:50,yy:83.5,zz:61,ls:57,dl:71,total:424.5},{exam:"2026期中考试",name:"任佳艳",yw:90,sx:65,yy:90,zz:58,ls:47,dl:71,total:421},{exam:"2026期中考试",name:"黄子涵",yw:98,sx:50,yy:97.5,zz:41,ls:69,dl:62,total:417.5},{exam:"2026期中考试",name:"王宇轩",yw:92,sx:44,yy:77,zz:64,ls:73,dl:62,total:412},{exam:"2026期中考试",name:"王苏豪",yw:91,sx:49,yy:92,zz:46,ls:53,dl:74,total:405},{exam:"2026期中考试",name:"李紫涵",yw:103,sx:27,yy:82,zz:70,ls:56,dl:66,total:404},{exam:"2026期中考试",name:"潘智宸",yw:86,sx:58,yy:98,zz:47,ls:50,dl:56,total:395},{exam:"2026期中考试",name:"章何弈",yw:94,sx:38,yy:68,zz:62,ls:59,dl:71,total:392},{exam:"2026期中考试",name:"张铭泽",yw:92,sx:21,yy:101.5,zz:65,ls:44,dl:41,total:364.5},{exam:"2026期中考试",name:"韩寅",yw:94,sx:35,yy:89.5,zz:56,ls:43,dl:47,total:364.5},{exam:"2026期中考试",name:"王安冉",yw:97,sx:21,yy:70,zz:50,ls:57,dl:66,total:361},{exam:"2026期中考试",name:"吕凯文",yw:96,sx:37,yy:69.5,zz:43,ls:54,dl:59,total:358.5},{exam:"2026期中考试",name:"许子言",yw:70,sx:42,yy:65,zz:50,ls:58,dl:43,total:328},{exam:"2026期中考试",name:"邱守诺",yw:80,sx:55,yy:50,zz:49,ls:43,dl:50,total:327}
+  ];
+  // 删除旧的四月份数据再添加
+  scoreArr=scoreArr.filter(x=>x.exam!=="2026期中考试");
+  data.forEach(d=>{const stu=stuArr.find(s=>s.name===d.name);d.idCard=stu?stu.idCard:"";scoreArr.push(d);});
+  localStorage.setItem(KEY_SCORE,JSON.stringify(scoreArr));
+  initExamSelector();renderSc();
+  syncUpload();
+  alert("✅ 成功导入 2026期中考试 共 "+data.length+" 条成绩！");
+}
+function clearAllData(){if(!confirm("确定清空全部本地数据？此操作不可恢复！"))return;localStorage.removeItem(KEY_STU);localStorage.removeItem(KEY_SCORE);localStorage.removeItem(KEY_AT);localStorage.removeItem(KEY_PU);localStorage.removeItem(KEY_LOG);localStorage.removeItem(KEY_TUTOR);stuArr=initStuData;scoreArr=initScoreData;atArr=[];puArr=[];logArr=[];tutorArr=[];localStorage.setItem(KEY_STU,JSON.stringify(initStuData));localStorage.setItem(KEY_SCORE,JSON.stringify(initScoreData));refreshAll();syncUpload();}
+
+// ===== 导师制函数 =====
+let tutorEditIdx=null;
+function openTutorModal(){document.getElementById("tutorModal").style.display="flex";["t_name","t_sex","t_tel1","t_tel2","t_tutor","t_tutorTel"].forEach(id=>document.getElementById(id).value="");tutorEditIdx=null;}
+function saveTutor(){
+  const d={name:document.getElementById("t_name").value.trim(),sex:document.getElementById("t_sex").value,tel1:document.getElementById("t_tel1").value.trim(),tel2:document.getElementById("t_tel2").value.trim(),tutor:document.getElementById("t_tutor").value.trim(),tutorTel:document.getElementById("t_tutorTel").value.trim()};
+  if(!d.name||!d.tutor)return alert("学生姓名和导师姓名不能为空");
+  if(tutorEditIdx!==null)tutorArr[tutorEditIdx]=d;else tutorArr.push(d);
+  localStorage.setItem(KEY_TUTOR,JSON.stringify(tutorArr));closeAllModal();renderTutor();syncUpload();
+}
+function editTutor(idx){
+  const s=tutorArr[idx];if(!s)return;
+  document.getElementById("t_name").value=s.name;
+  document.getElementById("t_sex").value=s.sex||"";document.getElementById("t_tel1").value=s.tel1||"";
+  document.getElementById("t_tel2").value=s.tel2||"";document.getElementById("t_tutor").value=s.tutor;
+  document.getElementById("t_tutorTel").value=s.tutorTel||"";tutorEditIdx=idx;
+  document.getElementById("tutorModal").style.display="flex";
+}
+function delTutor(idx){if(!confirm("确定删除该导师关系？"))return;tutorArr.splice(idx,1);localStorage.setItem(KEY_TUTOR,JSON.stringify(tutorArr));renderTutor();syncUpload();}
+function renderTutor(list){
+  const arr=list||tutorArr;
+  document.getElementById("tutorTable").innerHTML=arr.map((s,i)=>`<tr><td>${i+1}</td><td><strong>${s.name}</strong></td><td>${s.sex?`<span class="badge ${s.sex==='男'?'badge-blue':'badge-orange'}">${s.sex}</span>`:"-"}</td><td>${s.tel1||"-"}</td><td>${s.tel2||"-"}</td><td><span class="badge badge-green">${s.tutor}</span></td><td>${s.tutorTel||"-"}</td><td><button class="btn btn-ghost" onclick="editTutor(${i})" style="padding:3px 12px;font-size:12px">修改</button><button class="btn btn-danger" onclick="delTutor(${i})" style="padding:3px 12px;font-size:12px">删除</button></td></tr>`).join("")||'<tr><td colspan="8"><div class="empty-state">暂无导师关系数据</div></td></tr>';
+}
+function searchTutor(){
+  const k=document.getElementById("tutorSearch").value.trim().toLowerCase();
+  renderTutor(k?tutorArr.filter(s=>s.name.includes(k)||s.tutor.includes(k)||s.tel1.includes(k)||s.tel2.includes(k)):null);
+}
+function importTutorData(){
+  if(tutorArr.length>0&&!confirm("当前已有导师数据，导入将覆盖全部现有数据，确定继续？"))return;
+  const data=[{name:'吕洲',class:'14',sex:'男',tel1:'13952967259',tel2:'18792697922',tutor:'陈靓',tutorTel:'13295222698'},{name:'吕煜蕾',class:'14',sex:'女',tel1:'15651281970',tel2:'13505299930',tutor:'陈靓',tutorTel:'13295222698'},{name:'朱宏文',class:'14',sex:'男',tel1:'13815162002',tel2:'13775528006',tutor:'陈靓',tutorTel:'13295222698'},{name:'朱嘉仪',class:'14',sex:'女',tel1:'15605283957',tel2:'15952937197',tutor:'陈靓',tutorTel:'13295222698'},{name:'严雨萱',class:'14',sex:'女',tel1:'18952939343',tel2:'13851408949',tutor:'陈靓',tutorTel:'13295222698'},{name:'张俣航',class:'14',sex:'男',tel1:'15722841985',tel2:'13625264266',tutor:'陈靓',tutorTel:'13295222698'},{name:'张梦璇',class:'14',sex:'女',tel1:'15802187615',tel2:'18821263919',tutor:'陈靓',tutorTel:'13295222698'},{name:'赵许琪',class:'14',sex:'女',tel1:'18952996810',tel2:'18952999357',tutor:'陈靓',tutorTel:'13295222698'},{name:'郭玥橦',class:'14',sex:'女',tel1:'13775393612',tel2:'18061190416',tutor:'陈靓',tutorTel:'13295222698'},{name:'黄子涵',class:'14',sex:'女',tel1:'13952991698',tel2:'13505296008',tutor:'陈靓',tutorTel:'13295222698'},{name:'焦子萱',class:'14',sex:'女',tel1:'15189145967',tel2:'13915951240',tutor:'陈靓',tutorTel:'13295222698'},{name:'管欣然',class:'14',sex:'女',tel1:'15996826250',tel2:'13400096880',tutor:'陈靓',tutorTel:'13295222698'},{name:'滕欣然',class:'14',sex:'女',tel1:'13645295694',tel2:'13521553613',tutor:'陈靓',tutorTel:'13295222698'},{name:'王安冉',class:'14',sex:'女',tel1:'18951905061',tel2:'18115895657',tutor:'陈靓',tutorTel:'17368506928'},{name:'吕凯文',class:'14',sex:'男',tel1:'17705298560',tel2:'17705298995',tutor:'笪明扬',tutorTel:'17368506928'},{name:'任佳艳',class:'14',sex:'女',tel1:'18852846081',tel2:'',tutor:'笪明扬',tutorTel:'17368506928'},{name:'刘雨昊',class:'14',sex:'男',tel1:'18952872118',tel2:'13851958837',tutor:'笪明扬',tutorTel:'17368506928'},{name:'许子言',class:'14',sex:'男',tel1:'13357778108',tel2:'',tutor:'笪明扬',tutorTel:'17368506928'},{name:'李紫涵',class:'14',sex:'女',tel1:'15097086920',tel2:'18393308568',tutor:'笪明扬',tutorTel:'17368506928'},{name:'邱守诺',class:'14',sex:'男',tel1:'13921555200',tel2:'13505299451',tutor:'笪明扬',tutorTel:'17368506928'},{name:'张铭泽',class:'14',sex:'男',tel1:'18852883338',tel2:'18914580051',tutor:'笪明扬',tutorTel:'17368506928'},{name:'秦诗涵',class:'14',sex:'女',tel1:'13451963520',tel2:'13505292348',tutor:'笪明扬',tutorTel:'17368506928'},{name:'章何弈',class:'14',sex:'男',tel1:'18252955155',tel2:'',tutor:'笪明扬',tutorTel:'17368506928'},{name:'王欣欣',class:'14',sex:'女',tel1:'13775396790',tel2:'13656108508',tutor:'方忠祥',tutorTel:'15252992307'},{name:'张启阳',class:'14',sex:'男',tel1:'13305299749',tel2:'13062915531',tutor:'方忠祥',tutorTel:'15252992307'},{name:'陈际舟',class:'14',sex:'男',tel1:'13914596203',tel2:'13812360101',tutor:'方忠祥',tutorTel:'15252992307'},{name:'陈瑞可',class:'14',sex:'女',tel1:'13912107137',tel2:'13952969299',tutor:'方忠祥',tutorTel:'15252992307'},{name:'赵丝格',class:'14',sex:'女',tel1:'13376190957',tel2:'18052865650',tutor:'方忠祥',tutorTel:'15252992307'},{name:'曹秋瑾',class:'14',sex:'女',tel1:'13775528692',tel2:'13775529273',tutor:'方忠祥',tutorTel:'15252992307'},{name:'路永延',class:'14',sex:'男',tel1:'15805160571',tel2:'',tutor:'方忠祥',tutorTel:'15252992307'},{name:'朱紫萱',class:'14',sex:'女',tel1:'13913400655',tel2:'13625260355',tutor:'刘院琴',tutorTel:'13861371552'},{name:'纪吴仪',class:'14',sex:'女',tel1:'13952969630',tel2:'15189198680',tutor:'刘院琴',tutorTel:'13861371552'},{name:'袁雨霏',class:'14',sex:'女',tel1:'13585957262',tel2:'17712823779',tutor:'刘院琴',tutorTel:'13861371552'},{name:'徐文萱',class:'14',sex:'女',tel1:'18914563486',tel2:'',tutor:'刘院琴',tutorTel:'13861371552'},{name:'包智翔',class:'14',sex:'男',tel1:'13815160730',tel2:'18021580430',tutor:'袁明顺',tutorTel:'13812362708'},{name:'陈亦可',class:'14',sex:'女',tel1:'13775397037',tel2:'18260645359',tutor:'袁明顺',tutorTel:'13812362708'},{name:'葛立文',class:'14',sex:'男',tel1:'13921558759',tel2:'18025267303',tutor:'袁明顺',tutorTel:'13812362708'},{name:'韩珂馨',class:'14',sex:'女',tel1:'15652826509',tel2:'18652855371',tutor:'袁明顺',tutorTel:'13812362708'},{name:'韩寅',class:'14',sex:'男',tel1:'13921554808',tel2:'15189149270',tutor:'袁明顺',tutorTel:'13812362708'},{name:'王宇轩',class:'14',sex:'男',tel1:'15996821088',tel2:'15996822988',tutor:'张裕',tutorTel:'15696719629'},{name:'王苏豪',class:'14',sex:'男',tel1:'13186493552',tel2:'18262562189',tutor:'张裕',tutorTel:'15696719629'},{name:'吴子晗',class:'14',sex:'女',tel1:'18114461114',tel2:'',tutor:'张裕',tutorTel:'15696719629'},{name:'胡佳馨',class:'14',sex:'女',tel1:'18252593779',tel2:'15952051229',tutor:'张裕',tutorTel:'15696719629'},{name:'雍涵茜',class:'14',sex:'女',tel1:'18952968659',tel2:'13776370742',tutor:'张裕',tutorTel:'15696719629'},{name:'潘智宸',class:'14',sex:'男',tel1:'13625264438',tel2:'15862952286',tutor:'张裕',tutorTel:'15696719629'},{name:'薛梦瑶',class:'14',sex:'女',tel1:'13862436109',tel2:'18252590720',tutor:'张裕',tutorTel:'15696719629'}];
+  tutorArr=data;
+  localStorage.setItem(KEY_TUTOR,JSON.stringify(tutorArr));
+  renderTutor();
+  // 自动同步电话到学生档案
+  let cnt=0;
+  stuArr.forEach(s=>{const t=tutorArr.find(x=>x.name===s.name);if(t){if(t.tel1){s.tel=t.tel1;cnt++;}if(t.tel2){s.tel2=t.tel2;cnt++;}}});
+  localStorage.setItem(KEY_STU,JSON.stringify(stuArr));
+  renderStu();
+  syncUpload();
+  alert("✅ 成功导入 46 条导师关系数据，并自动同步了 "+cnt+" 个电话到学生档案！");
+}
+
+  window.onload=function(){
+  // 强制清除损坏的本地数据，确保从硬编码数据恢复
+  try{localStorage.removeItem('tutorData');}catch(e){}
+  // 先渲染本地数据
+  try{
+    if(stuArr.length<45){stuArr=JSON.parse(JSON.stringify(initStuData));localStorage.setItem(KEY_STU,JSON.stringify(stuArr));}
+    if(scoreArr.length<20){scoreArr=JSON.parse(JSON.stringify(initScoreData));localStorage.setItem(KEY_SCORE,JSON.stringify(scoreArr));}
+    ensureLocalScores();
+  }catch(e){}
+  try{refreshAll()}catch(e){}
+  switchPage("home");
+  var t=document.getElementById("nowTime");if(t)t.textContent=new Date().toLocaleString('zh-CN');
+  // 立刻同步
+  syncDownload().then(function(){try{ensureLocalScores();refreshAll();}catch(e){}}).catch(function(){});
+  startSyncPolling();
+  };
+  </script>
+  <script>
+  function toggleSidebar(show){
+    const sb=document.querySelector('.sidebar');
+    const ol=document.getElementById('overlay');
+    if(!sb||!ol) return;
+    if(typeof show==='boolean'){
+      if(show){ sb.classList.add('open'); ol.classList.add('show'); }
+      else { sb.classList.remove('open'); ol.classList.remove('show'); }
+      return;
+    }
+    const opening = !sb.classList.contains('open');
+    sb.classList.toggle('open');
+    if(opening) ol.classList.add('show'); else ol.classList.remove('show');
+  }
+  window.addEventListener('resize', ()=>{ if(window.innerWidth>960){ document.querySelector('.sidebar')?.classList.remove('open'); document.getElementById('overlay')?.classList.remove('show'); } });
+  </script>
+  </body>
+  </html>
+
+
+
+
+
