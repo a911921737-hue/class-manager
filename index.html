@@ -643,9 +643,13 @@ if(localStorage.getItem('stuData_v')!=='v3'){localStorage.removeItem(KEY_STU);lo
 if(localStorage.getItem('scoreData_v')!=='v1'){localStorage.setItem(KEY_SCORE,JSON.stringify(initScoreData));localStorage.setItem('scoreData_v','v1');}
 if(!localStorage.getItem(KEY_STU))localStorage.setItem(KEY_STU,JSON.stringify(initStuData));
 let stuArr=JSON.parse(localStorage.getItem(KEY_STU))||initStuData;
+// 恢复丢失的学生数据
+if(stuArr.length<initStuData.length){stuArr=initStuData.map(function(x){return JSON.parse(JSON.stringify(x));});localStorage.setItem(KEY_STU,JSON.stringify(stuArr));}
 let scoreArr=JSON.parse(localStorage.getItem(KEY_SCORE))||initScoreData;
 // 数据补充/重命名函数（在同步后调用）
 function ensureLocalScores(){
+  // 恢复丢失的学生数据（如果少于45人说明被覆盖了）
+  var s2=JSON.parse(localStorage.getItem(KEY_STU))||[];if(s2.length<45){localStorage.setItem(KEY_STU,JSON.stringify(initStuData));stuArr=JSON.parse(JSON.stringify(initStuData));}
   var s=JSON.parse(localStorage.getItem(KEY_SCORE))||[];
   s.forEach(function(x){if(x.exam==='2026四月联考'||x.exam==='2026年4月联考'||x.exam==='2026年期中考试')x.exam='2026期中考试';});
   var seen={};s=s.filter(function(x){var k=x.exam+'_'+x.name;if(seen[k])return false;seen[k]=true;return true;});
