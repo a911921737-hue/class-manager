@@ -223,6 +223,7 @@ textarea.form-input { resize: vertical; min-height: 100px; line-height: 1.6; }
     <div class="menu-item" onclick="switchPage('attend')"><span class="icon-wrap">📅</span> 考勤记录</div>
     <div class="menu-item" onclick="switchPage('punish')"><span class="icon-wrap">⚠️</span> 违纪登记</div>
     <div class="menu-item" onclick="switchPage('log')"><span class="icon-wrap">📝</span> 班级日志</div>
+    <div class="menu-item" onclick="switchPage('tutor')"><span class="icon-wrap">👩‍🏫</span> 全员导师制</div>
     <div class="menu-item" onclick="switchPage('settings')"><span class="icon-wrap">⚙️</span> 同步设置</div>
   </div>
 
@@ -340,6 +341,23 @@ textarea.form-input { resize: vertical; min-height: 100px; line-height: 1.6; }
       </div>
     </div>
 
+    <!-- ========== 全员导师制 ========== -->
+    <div id="tutor" class="page">
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">👩‍🏫 全员导师制</div>
+          <div class="btn-group">
+            <button class="btn btn-primary" onclick="openTutorModal()">新增</button>
+            <button class="btn btn-success" onclick="importTutorData()">从Excel批量导入</button>
+          </div>
+        </div>
+        <div class="section-body">
+          <div class="search-bar"><input class="search-input" id="tutorSearch" placeholder="搜索学生姓名 / 导师姓名"><button class="btn btn-success" onclick="searchTutor()">搜索</button></div>
+          <div class="table-wrap"><table><thead><tr><th>序号</th><th>班级</th><th>学生姓名</th><th>性别</th><th>学生电话1</th><th>学生电话2</th><th>导师姓名</th><th>导师电话</th><th>操作</th></tr></thead><tbody id="tutorTable"></tbody></table></div>
+        </div>
+      </div>
+    </div>
+
     <div id="settings" class="page">
       <div class="section">
         <div class="section-header">
@@ -440,6 +458,21 @@ textarea.form-input { resize: vertical; min-height: 100px; line-height: 1.6; }
   </div>
 </div>
 
+<!-- 导师制 Modal -->
+<div class="modal" id="tutorModal">
+  <div class="modal-box">
+    <div class="modal-title">新增 / 编辑导师关系</div>
+    <div class="form-item"><label>班级</label><input class="form-input" id="t_class" placeholder="如 14"></div>
+    <div class="form-item"><label>学生姓名 *</label><input class="form-input" id="t_name" placeholder="学生姓名"></div>
+    <div class="form-item"><label>性别</label><select class="form-input" id="t_sex"><option value="">请选择</option><option>男</option><option>女</option></select></div>
+    <div class="form-item"><label>学生电话1</label><input class="form-input" id="t_tel1" placeholder="学生手机号"></div>
+    <div class="form-item"><label>学生电话2</label><input class="form-input" id="t_tel2" placeholder="家长手机号"></div>
+    <div class="form-item"><label>导师姓名 *</label><input class="form-input" id="t_tutor" placeholder="导师姓名"></div>
+    <div class="form-item"><label>导师电话</label><input class="form-input" id="t_tutorTel" placeholder="导师手机号"></div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeAllModal()">取消</button><button class="btn btn-primary" onclick="saveTutor()">保存</button></div>
+  </div>
+</div>
+
 <div class="img-viewer" id="imgModal" onclick="this.style.display='none'">
   <img id="imgModalContent">
 </div>
@@ -488,7 +521,7 @@ function setSyncStatus(state) {
 
 function getSyncPayload() {
   return JSON.stringify({
-    stu: stuArr, score: scoreArr, at: atArr, pu: puArr, log: logArr
+    stu: stuArr, score: scoreArr, at: atArr, pu: puArr, log: logArr, tutor: tutorArr
   });
 }
 
@@ -528,6 +561,7 @@ async function syncDownload() {
     if (data.at && data.at.length>0) { atArr = data.at; localStorage.setItem(KEY_AT, JSON.stringify(data.at)); }
     if (data.pu && data.pu.length>0) { puArr = data.pu; localStorage.setItem(KEY_PU, JSON.stringify(data.pu)); }
     if (data.log && data.log.length>0) { logArr = data.log; localStorage.setItem(KEY_LOG, JSON.stringify(data.log)); }
+    if (data.tutor && data.tutor.length>0) { tutorArr = data.tutor; localStorage.setItem(KEY_TUTOR, JSON.stringify(data.tutor)); }
     lastSyncData = getSyncPayload();
     setSyncStatus('connected');
     refreshAll();
@@ -574,6 +608,7 @@ function startSyncPolling() {
       if (data.at && data.at.length>0) { atArr = data.at; localStorage.setItem(KEY_AT, JSON.stringify(data.at)); }
       if (data.pu && data.pu.length>0) { puArr = data.pu; localStorage.setItem(KEY_PU, JSON.stringify(data.pu)); }
       if (data.log && data.log.length>0) { logArr = data.log; localStorage.setItem(KEY_LOG, JSON.stringify(data.log)); }
+      if (data.tutor && data.tutor.length>0) { tutorArr = data.tutor; localStorage.setItem(KEY_TUTOR, JSON.stringify(data.tutor)); }
       lastSyncData = currentPayload;
       setSyncStatus('connected');
       refreshAll();
@@ -581,7 +616,7 @@ function startSyncPolling() {
   }, 5000);
 }
 
-const KEY_STU="stuData",KEY_SCORE="scoreData",KEY_AT="attendData",KEY_PU="punishData",KEY_LOG="logData";
+const KEY_STU="stuData",KEY_SCORE="scoreData",KEY_AT="attendData",KEY_PU="punishData",KEY_LOG="logData",KEY_TUTOR="tutorData";
 const initStuData=[
   {idCard:"321183201007304852",name:"王宇轩",sex:"男",tel:"15996821088",address:"御东国际79幢801室"},{idCard:"321183200912242968",name:"王安冉",sex:"女",tel:"18951905061",address:"新城樾府14幢606"},{idCard:"321183200909173850",name:"王苏豪",sex:"男",tel:"13186493552",address:"江家庄86号"},{idCard:"320382201007160100",name:"王欣欣",sex:"女",tel:"13775396790",address:"江苏省句容市江南世家5栋2901"},{idCard:"321183200912230035",name:"包智翔",sex:"男",tel:"13815160730",address:"凌家园20号603"},{idCard:"321183201002184839",name:"吕凯文",sex:"男",tel:"17705298560",address:"江苏省句容市北部新城西区4栋1单元"},{idCard:"321183201005184818",name:"吕洲",sex:"男",tel:"13952967259",address:"句容市香溪湾E9幢2204"},{idCard:"321183200910220044",name:"吕煜蕾",sex:"女",tel:"15651281970",address:"芳邻雅居11栋1单元302"},{idCard:"321183200910313611",name:"朱宏文",sex:"男",tel:"13815162002",address:"中央美地8栋一单元701室"},{idCard:"321183201004120820",name:"朱紫萱",sex:"女",tel:"13913400655",address:"黄金花园73栋206"},{idCard:"321202201002180122",name:"朱嘉仪",sex:"女",tel:"15605283957",address:"中央美地8栋1单元1101"},{idCard:"321183200910230824",name:"任佳艳",sex:"女",tel:"18852846081",address:"锦绣句容东四栋二单元904"},{idCard:"321183200911100036",name:"刘雨昊",sex:"男",tel:"18952872118",address:"华阳街道吉里村126号"},{idCard:"321183201003030815",name:"许子言",sex:"男",tel:"13357778108",address:"公园道C05幢2702"},{idCard:"321183200910092927",name:"纪吴仪",sex:"女",tel:"13952969630",address:"御东国际73幢1704"},{idCard:"321183200910075588",name:"严雨萱",sex:"女",tel:"18952939343",address:"文昌雅苑2栋2单元1407室"},{idCard:"620825200911252501",name:"李紫涵",sex:"女",tel:"15097086920",address:"宝华花园45栋一单元"},{idCard:"320705200909263525",name:"吴子晗",sex:"女",tel:"18114461114",address:"碧桂园临湖苑8栋2001"},{idCard:"371725201008303032",name:"邱守诺",sex:"男",tel:"13921555200",address:"黄金花园东46栋3单元305"},{idCard:"321183201007266219",name:"张启阳",sex:"男",tel:"13305299749",address:"维也纳花园D11幢903"},{idCard:"321183201003050832",name:"张俣航",sex:"男",tel:"15722841985",address:"句容市华阳北路典雅居1栋406室"},{idCard:"32118320100801382X",name:"张梦璇",sex:"女",tel:"15802187615",address:"公园尚城18幢"},{idCard:"321183201005280033",name:"张铭泽",sex:"男",tel:"18852883338",address:"碧桂园中央公园"},{idCard:"32118320100613488X",name:"陈亦可",sex:"女",tel:"13775397037",address:"江苏省句容市城市峰境6栋东单元1101"},{idCard:"321183201007220819",name:"陈际舟",sex:"男",tel:"13914596203",address:"江苏省句容市梧桐墅20幢1单元302"},{idCard:"321183201003300045",name:"陈瑞可",sex:"女",tel:"13912107137",address:"晨钟艺境6单元"},{idCard:"321183200909163820",name:"赵丝格",sex:"女",tel:"13376190957",address:"御栋国际75栋"},{idCard:"321183201006085643",name:"赵许琪",sex:"女",tel:"18952996810",address:"太阳星城8栋102"},{idCard:"320115200909023126",name:"胡佳馨",sex:"女",tel:"18252593779",address:"句容市世茂花园26栋301室"},{idCard:"321183201008305582",name:"秦诗涵",sex:"女",tel:"13451963520",address:"文化新村10栋"},{idCard:"340223201005282540",name:"袁雨霏",sex:"女",tel:"13585957262",address:"嘉烨御花园25幢3001"},{idCard:"321183201008064862",name:"徐文萱",sex:"女",tel:"",address:"世茂花园B6幢一单元803"},{idCard:"32118320100819486X",name:"郭玥橦",sex:"女",tel:"13775393612",address:"开发区西苑新村2巷45号"},{idCard:"321183201001193864",name:"黄子涵",sex:"女",tel:"13952991698",address:"金润香江丽景礼宾府702室"},{idCard:"321183200910244820",name:"曹秋瑾",sex:"女",tel:"13775528692",address:"维也纳花园D11栋306"},{idCard:"32118320100127551X",name:"章何弈",sex:"男",tel:"",address:"商业街栖风苑3幢303"},{idCard:"321183200910213610",name:"葛立文",sex:"男",tel:"13921558759",address:"句容市御东国际6期81栋504室"},{idCard:"321183201005062028",name:"韩珂馨",sex:"女",tel:"15652826509",address:"碧桂园柏悦华府"},{idCard:"321183201002142014",name:"韩寅",sex:"男",tel:"13921554808",address:"通宁公寓20幢2单元103"},{idCard:"32118320090926084X",name:"焦子萱",sex:"女",tel:"15189145967",address:"台北上上城11幢402室"},{idCard:"340823201008240218",name:"路永延",sex:"男",tel:"15805160571",address:"玲珑越13栋"},{idCard:"321183201001115524",name:"雍涵茜",sex:"女",tel:"18952968659",address:"句容市润景美邻苑28栋204室"},{idCard:"321183201001033828",name:"管欣然",sex:"女",tel:"15996826250",address:"御东国际三期66幢一单元502室"},{idCard:"321183201003034824",name:"滕欣然",sex:"女",tel:"13645295694",address:"句容第二中学边小院1单元301"},{idCard:"321183201001072413",name:"潘智宸",sex:"男",tel:"13625264438",address:"葛仙小区6栋205"},{idCard:"32118320100111082X",name:"薛梦瑶",sex:"女",tel:"13862436109",address:"花语墅17栋1507"},{idCard:"321183200710040000",name:"江文槿",sex:"女",tel:"",address:""}
 ];
@@ -596,12 +631,13 @@ let scoreArr=JSON.parse(localStorage.getItem(KEY_SCORE))||initScoreData;
 let atArr=JSON.parse(localStorage.getItem(KEY_AT))||[];
 let puArr=JSON.parse(localStorage.getItem(KEY_PU))||[];
 let logArr=JSON.parse(localStorage.getItem(KEY_LOG))||[];
+let tutorArr=JSON.parse(localStorage.getItem(KEY_TUTOR))||[];
 let atEditIdx=null,puEditIdx=null,logEditIdx=null;
 setInterval(()=>{document.getElementById("nowTime").textContent=new Date().toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});},1000);
-function downloadBackup(){const data={stu:stuArr,score:scoreArr,at:atArr,pu:puArr,log:logArr};const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);const d=new Date();a.download=`班级数据备份_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.json`;a.click();alert("备份文件已下载，请保存到 D:\\学生管理系统 文件夹中");}
-function restoreBackup(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(ev){try{const d=JSON.parse(ev.target.result);if(d.stu){stuArr=d.stu;localStorage.setItem(KEY_STU,JSON.stringify(d.stu));}if(d.score){scoreArr=d.score;localStorage.setItem(KEY_SCORE,JSON.stringify(d.score));}if(d.at){atArr=d.at;localStorage.setItem(KEY_AT,JSON.stringify(d.at));}if(d.pu){puArr=d.pu;localStorage.setItem(KEY_PU,JSON.stringify(d.pu));}if(d.log){logArr=d.log;localStorage.setItem(KEY_LOG,JSON.stringify(d.log));}refreshAll();alert("数据恢复成功！");syncUpload();}catch(err){alert("文件格式错误");}};reader.readAsText(file);e.target.value="";}
+function downloadBackup(){const data={stu:stuArr,score:scoreArr,at:atArr,pu:puArr,log:logArr,tutor:tutorArr};const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);const d=new Date();a.download=`班级数据备份_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.json`;a.click();alert("备份文件已下载，请保存到 D:\\学生管理系统 文件夹中");}
+function restoreBackup(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(ev){try{const d=JSON.parse(ev.target.result);if(d.stu){stuArr=d.stu;localStorage.setItem(KEY_STU,JSON.stringify(d.stu));}if(d.score){scoreArr=d.score;localStorage.setItem(KEY_SCORE,JSON.stringify(d.score));}if(d.at){atArr=d.at;localStorage.setItem(KEY_AT,JSON.stringify(d.at));}if(d.pu){puArr=d.pu;localStorage.setItem(KEY_PU,JSON.stringify(d.pu));}if(d.log){logArr=d.log;localStorage.setItem(KEY_LOG,JSON.stringify(d.log));}if(d.tutor){tutorArr=d.tutor;localStorage.setItem(KEY_TUTOR,JSON.stringify(d.tutor));}refreshAll();alert("数据恢复成功！");syncUpload();}catch(err){alert("文件格式错误");}};reader.readAsText(file);e.target.value="";}
 function switchPage(p){document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));document.getElementById(p).classList.add("active");document.querySelectorAll(".menu-item").forEach(m=>m.classList.remove("active"));const el=document.querySelector(`.menu-item[onclick*="'${p}'"]`);if(el)el.classList.add("active");refreshAll();}
-function closeAllModal(){document.querySelectorAll(".modal").forEach(m=>m.style.display="none");atEditIdx=null;puEditIdx=null;logEditIdx=null;}
+function closeAllModal(){document.querySelectorAll(".modal").forEach(m=>m.style.display="none");atEditIdx=null;puEditIdx=null;logEditIdx=null;tutorEditIdx=null;}
 document.querySelectorAll(".modal").forEach(m=>{m.addEventListener("click",e=>{if(e.target===m)closeAllModal();});});
 // 小屏下点击侧边栏菜单自动关闭侧边栏，改善交互
 document.querySelectorAll('.menu-item').forEach(mi=>{mi.addEventListener('click',()=>{ if(window.innerWidth<=960) toggleSidebar(false); });});
@@ -641,7 +677,7 @@ function delLog(idx){if(!confirm("确定删除该日志？"))return;logArr.splic
 function renderLog(){const arr=[...logArr].reverse();if(!arr.length){document.getElementById("logTimeline").innerHTML='<div class="empty-state">还没有日志记录，点击上方「写日志」开始记录</div>';return;}let ld="",h="";arr.forEach((i,idx)=>{const ri=logArr.length-1-idx;if(i.date!==ld){if(ld)h+='</div>';h+=`<div class="timeline-day"><div class="timeline-day-label">${i.date}</div>`;ld=i.date;}h+=`<div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-body">${i.time?`<div class="timeline-time">${i.time}</div>`:""}<div class="timeline-content">${i.content}</div><div class="timeline-actions"><button class="btn btn-ghost" onclick="editLog(${ri})" style="padding:3px 12px;font-size:12px">修改</button><button class="btn btn-danger" onclick="delLog(${ri})" style="padding:3px 12px;font-size:12px">删除</button></div></div></div>`;});h+='</div>';document.getElementById("logTimeline").innerHTML=h;}
 function showExamRank(examName){const sel=document.getElementById("sc_exam_selector");if(sel){for(let i=0;i<sel.options.length;i++){if(sel.options[i].value===examName){sel.selectedIndex=i;break;}}}switchPage("score");}
 function refreshAll(){
-  initExamSelector();renderStu();renderSc();loadDailyAt();renderPu();renderLog();
+  initExamSelector();renderStu();renderSc();loadDailyAt();renderPu();renderLog();renderTutor();
   document.getElementById("allStu").textContent=stuArr.length;
   const td=new Date().toISOString().split("T")[0],today=atArr.filter(x=>x.date===td);
   document.getElementById("inNum").textContent=today.filter(x=>x.status==="出勤").length;
@@ -650,7 +686,44 @@ function refreshAll(){
   if(ep&&scoreArr.length){const s=scoreArr.filter(x=>x.exam==="2026年5月联考").sort((a,b)=>b.total-a.total);if(s.length){const t3=s.slice(0,3),avg=(s.reduce((s,x)=>s+x.total,0)/s.length).toFixed(1);ep.innerHTML=`<strong>2026年5月联考</strong> · ${s.length} 人参考 · 最高 ${s[0].total} 分 · 最低 ${s[s.length-1].total} 分 · 平均 ${avg} 分<div class="exam-top3">前三：${t3.map(x=>x.name+'（'+x.total+'分）').join(' ')}</div>`;}}
 }
 function exportScores(){const exam=document.getElementById("sc_exam_selector").value,s=scoreArr.filter(x=>x.exam===exam).sort((a,b)=>b.total-a.total);if(!s.length)return alert("没有可导出的成绩");let csv="\uFEFF排名,姓名,语文,数学,英语,历史,政治,地理,总分\n";s.forEach((s,i)=>{csv+=(i+1)+","+s.name+","+s.yw+","+s.sx+","+s.yy+","+s.ls+","+s.zz+","+s.dl+","+s.total+"\n";});const b=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=exam+" 成绩.csv";a.click();}
-function clearAllData(){if(!confirm("确定清空全部本地数据？此操作不可恢复！"))return;localStorage.removeItem(KEY_STU);localStorage.removeItem(KEY_SCORE);localStorage.removeItem(KEY_AT);localStorage.removeItem(KEY_PU);localStorage.removeItem(KEY_LOG);stuArr=initStuData;scoreArr=initScoreData;atArr=[];puArr=[];logArr=[];localStorage.setItem(KEY_STU,JSON.stringify(initStuData));localStorage.setItem(KEY_SCORE,JSON.stringify(initScoreData));refreshAll();syncUpload();}
+function clearAllData(){if(!confirm("确定清空全部本地数据？此操作不可恢复！"))return;localStorage.removeItem(KEY_STU);localStorage.removeItem(KEY_SCORE);localStorage.removeItem(KEY_AT);localStorage.removeItem(KEY_PU);localStorage.removeItem(KEY_LOG);localStorage.removeItem(KEY_TUTOR);stuArr=initStuData;scoreArr=initScoreData;atArr=[];puArr=[];logArr=[];tutorArr=[];localStorage.setItem(KEY_STU,JSON.stringify(initStuData));localStorage.setItem(KEY_SCORE,JSON.stringify(initScoreData));refreshAll();syncUpload();}
+
+// ===== 导师制函数 =====
+let tutorEditIdx=null;
+function openTutorModal(){document.getElementById("tutorModal").style.display="flex";["t_class","t_name","t_sex","t_tel1","t_tel2","t_tutor","t_tutorTel"].forEach(id=>document.getElementById(id).value="");tutorEditIdx=null;}
+function saveTutor(){
+  const d={class:document.getElementById("t_class").value.trim(),name:document.getElementById("t_name").value.trim(),sex:document.getElementById("t_sex").value,tel1:document.getElementById("t_tel1").value.trim(),tel2:document.getElementById("t_tel2").value.trim(),tutor:document.getElementById("t_tutor").value.trim(),tutorTel:document.getElementById("t_tutorTel").value.trim()};
+  if(!d.name||!d.tutor)return alert("学生姓名和导师姓名不能为空");
+  if(tutorEditIdx!==null)tutorArr[tutorEditIdx]=d;else tutorArr.push(d);
+  localStorage.setItem(KEY_TUTOR,JSON.stringify(tutorArr));closeAllModal();renderTutor();syncUpload();
+}
+function editTutor(idx){
+  const s=tutorArr[idx];if(!s)return;
+  document.getElementById("t_class").value=s.class||"";document.getElementById("t_name").value=s.name;
+  document.getElementById("t_sex").value=s.sex||"";document.getElementById("t_tel1").value=s.tel1||"";
+  document.getElementById("t_tel2").value=s.tel2||"";document.getElementById("t_tutor").value=s.tutor;
+  document.getElementById("t_tutorTel").value=s.tutorTel||"";tutorEditIdx=idx;
+  document.getElementById("tutorModal").style.display="flex";
+}
+function delTutor(idx){if(!confirm("确定删除该导师关系？"))return;tutorArr.splice(idx,1);localStorage.setItem(KEY_TUTOR,JSON.stringify(tutorArr));renderTutor();syncUpload();}
+function renderTutor(list){
+  const arr=list||tutorArr;
+  document.getElementById("tutorTable").innerHTML=arr.map((s,i)=>`<tr><td>${i+1}</td><td>${s.class||"14"}</td><td><strong>${s.name}</strong></td><td>${s.sex?`<span class="badge ${s.sex==='男'?'badge-blue':'badge-orange'}">${s.sex}</span>`:"-"}</td><td>${s.tel1||"-"}</td><td>${s.tel2||"-"}</td><td><span class="badge badge-green">${s.tutor}</span></td><td>${s.tutorTel||"-"}</td><td><button class="btn btn-ghost" onclick="editTutor(${i})" style="padding:3px 12px;font-size:12px">修改</button><button class="btn btn-danger" onclick="delTutor(${i})" style="padding:3px 12px;font-size:12px">删除</button></td></tr>`).join("")||'<tr><td colspan="9"><div class="empty-state">暂无导师关系数据</div></td></tr>';
+}
+function searchTutor(){
+  const k=document.getElementById("tutorSearch").value.trim().toLowerCase();
+  renderTutor(k?tutorArr.filter(s=>s.name.includes(k)||s.tutor.includes(k)||s.tel1.includes(k)||s.tel2.includes(k)):null);
+}
+function importTutorData(){
+  if(tutorArr.length>0&&!confirm("当前已有导师数据，导入将覆盖全部现有数据，确定继续？"))return;
+  const data=[{name:'吕洲',class:'14',sex:'男',tel1:'13952967259',tel2:'18792697922',tutor:'陈靓',tutorTel:'13295222698'},{name:'吕煜蕾',class:'14',sex:'女',tel1:'15651281970',tel2:'13505299930',tutor:'陈靓',tutorTel:'13295222698'},{name:'朱宏文',class:'14',sex:'男',tel1:'13815162002',tel2:'13775528006',tutor:'陈靓',tutorTel:'13295222698'},{name:'朱嘉仪',class:'14',sex:'女',tel1:'15605283957',tel2:'15952937197',tutor:'陈靓',tutorTel:'13295222698'},{name:'严雨萱',class:'14',sex:'女',tel1:'18952939343',tel2:'13851408949',tutor:'陈靓',tutorTel:'13295222698'},{name:'张俣航',class:'14',sex:'男',tel1:'15722841985',tel2:'13625264266',tutor:'陈靓',tutorTel:'13295222698'},{name:'张梦璇',class:'14',sex:'女',tel1:'15802187615',tel2:'18821263919',tutor:'陈靓',tutorTel:'13295222698'},{name:'赵许琪',class:'14',sex:'女',tel1:'18952996810',tel2:'18952999357',tutor:'陈靓',tutorTel:'13295222698'},{name:'郭玥橦',class:'14',sex:'女',tel1:'13775393612',tel2:'18061190416',tutor:'陈靓',tutorTel:'13295222698'},{name:'黄子涵',class:'14',sex:'女',tel1:'13952991698',tel2:'13505296008',tutor:'陈靓',tutorTel:'13295222698'},{name:'焦子萱',class:'14',sex:'女',tel1:'15189145967',tel2:'13915951240',tutor:'陈靓',tutorTel:'13295222698'},{name:'管欣然',class:'14',sex:'女',tel1:'15996826250',tel2:'13400096880',tutor:'陈靓',tutorTel:'13295222698'},{name:'滕欣然',class:'14',sex:'女',tel1:'13645295694',tel2:'13521553613',tutor:'陈靓',tutorTel:'13295222698'},{name:'王安冉',class:'14',sex:'女',tel1:'18951905061',tel2:'18115895657',tutor:'陈靓',tutorTel:'17368506928'},{name:'吕凯文',class:'14',sex:'男',tel1:'17705298560',tel2:'17705298995',tutor:'笪明扬',tutorTel:'17368506928'},{name:'任佳艳',class:'14',sex:'女',tel1:'18852846081',tel2:'',tutor:'笪明扬',tutorTel:'17368506928'},{name:'刘雨昊',class:'14',sex:'男',tel1:'18952872118',tel2:'13851958837',tutor:'笪明扬',tutorTel:'17368506928'},{name:'许子言',class:'14',sex:'男',tel1:'13357778108',tel2:'',tutor:'笪明扬',tutorTel:'17368506928'},{name:'李紫涵',class:'14',sex:'女',tel1:'15097086920',tel2:'18393308568',tutor:'笪明扬',tutorTel:'17368506928'},{name:'邱守诺',class:'14',sex:'男',tel1:'13921555200',tel2:'13505299451',tutor:'笪明扬',tutorTel:'17368506928'},{name:'张铭泽',class:'14',sex:'男',tel1:'18852883338',tel2:'18914580051',tutor:'笪明扬',tutorTel:'17368506928'},{name:'秦诗涵',class:'14',sex:'女',tel1:'13451963520',tel2:'13505292348',tutor:'笪明扬',tutorTel:'17368506928'},{name:'章何弈',class:'14',sex:'男',tel1:'18252955155',tel2:'',tutor:'笪明扬',tutorTel:'17368506928'},{name:'王欣欣',class:'14',sex:'女',tel1:'13775396790',tel2:'13656108508',tutor:'方忠祥',tutorTel:'15252992307'},{name:'张启阳',class:'14',sex:'男',tel1:'13305299749',tel2:'13062915531',tutor:'方忠祥',tutorTel:'15252992307'},{name:'陈际舟',class:'14',sex:'男',tel1:'13914596203',tel2:'13812360101',tutor:'方忠祥',tutorTel:'15252992307'},{name:'陈瑞可',class:'14',sex:'女',tel1:'13912107137',tel2:'13952969299',tutor:'方忠祥',tutorTel:'15252992307'},{name:'赵丝格',class:'14',sex:'女',tel1:'13376190957',tel2:'18052865650',tutor:'方忠祥',tutorTel:'15252992307'},{name:'曹秋瑾',class:'14',sex:'女',tel1:'13775528692',tel2:'13775529273',tutor:'方忠祥',tutorTel:'15252992307'},{name:'路永延',class:'14',sex:'男',tel1:'15805160571',tel2:'',tutor:'方忠祥',tutorTel:'15252992307'},{name:'朱紫萱',class:'14',sex:'女',tel1:'13913400655',tel2:'13625260355',tutor:'刘院琴',tutorTel:'13861371552'},{name:'纪吴仪',class:'14',sex:'女',tel1:'13952969630',tel2:'15189198680',tutor:'刘院琴',tutorTel:'13861371552'},{name:'袁雨霏',class:'14',sex:'女',tel1:'13585957262',tel2:'17712823779',tutor:'刘院琴',tutorTel:'13861371552'},{name:'徐文萱',class:'14',sex:'女',tel1:'18914563486',tel2:'',tutor:'刘院琴',tutorTel:'13861371552'},{name:'包智翔',class:'14',sex:'男',tel1:'13815160730',tel2:'18021580430',tutor:'袁明顺',tutorTel:'13812362708'},{name:'陈亦可',class:'14',sex:'女',tel1:'13775397037',tel2:'18260645359',tutor:'袁明顺',tutorTel:'13812362708'},{name:'葛立文',class:'14',sex:'男',tel1:'13921558759',tel2:'18025267303',tutor:'袁明顺',tutorTel:'13812362708'},{name:'韩珂馨',class:'14',sex:'女',tel1:'15652826509',tel2:'18652855371',tutor:'袁明顺',tutorTel:'13812362708'},{name:'韩寅',class:'14',sex:'男',tel1:'13921554808',tel2:'15189149270',tutor:'袁明顺',tutorTel:'13812362708'},{name:'王宇轩',class:'14',sex:'男',tel1:'15996821088',tel2:'15996822988',tutor:'张裕',tutorTel:'15696719629'},{name:'王苏豪',class:'14',sex:'男',tel1:'13186493552',tel2:'18262562189',tutor:'张裕',tutorTel:'15696719629'},{name:'吴子晗',class:'14',sex:'女',tel1:'18114461114',tel2:'',tutor:'张裕',tutorTel:'15696719629'},{name:'胡佳馨',class:'14',sex:'女',tel1:'18252593779',tel2:'15952051229',tutor:'张裕',tutorTel:'15696719629'},{name:'雍涵茜',class:'14',sex:'女',tel1:'18952968659',tel2:'13776370742',tutor:'张裕',tutorTel:'15696719629'},{name:'潘智宸',class:'14',sex:'男',tel1:'13625264438',tel2:'15862952286',tutor:'张裕',tutorTel:'15696719629'},{name:'薛梦瑶',class:'14',sex:'女',tel1:'13862436109',tel2:'18252590720',tutor:'张裕',tutorTel:'15696719629'}];
+  tutorArr=data;
+  localStorage.setItem(KEY_TUTOR,JSON.stringify(tutorArr));
+  renderTutor();
+  syncUpload();
+  alert("✅ 成功导入 46 条导师关系数据！");
+}
+
   window.onload=function(){try{refreshAll()}catch(e){console.error(e)}switchPage("home");document.getElementById("nowTime").textContent=new Date().toLocaleString('zh-CN');loadSyncConfig();startSyncPolling();syncDownload();};
   </script>
   <script>
