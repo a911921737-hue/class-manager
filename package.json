@@ -5,7 +5,5 @@
   "scripts": {
     "start": "node server/server.js"
   },
-  "dependencies": {
-    "pg": "^8.13.0"
-  }
+  "dependencies": {}
 }
