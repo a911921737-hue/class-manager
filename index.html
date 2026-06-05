@@ -521,6 +521,8 @@ textarea.form-input { resize: vertical; min-height: 100px; line-height: 1.6; }
 // === 云端同步配置 ===
 const SYNC_URL_KEY = 'sync_server_url';
 const SYNC_KEY_KEY = 'sync_sync_key';
+const DEFAULT_SYNC_URL = 'https://class-manager-omega.vercel.app';
+const DEFAULT_SYNC_KEY = 'class2025';
 let syncDot = null;
 let syncText = null;
 let syncInterval = null;
@@ -528,6 +530,9 @@ let lastSyncData = '';
 let syncEnabled = false;
 
 function loadSyncConfig() {
+  // 首次使用自动写入默认值
+  if (!localStorage.getItem(SYNC_URL_KEY)) localStorage.setItem(SYNC_URL_KEY, DEFAULT_SYNC_URL);
+  if (!localStorage.getItem(SYNC_KEY_KEY)) localStorage.setItem(SYNC_KEY_KEY, DEFAULT_SYNC_KEY);
   const url = localStorage.getItem(SYNC_URL_KEY) || '';
   const key = localStorage.getItem(SYNC_KEY_KEY) || '';
   // 仅在首次加载时填充输入框
