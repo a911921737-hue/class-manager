@@ -614,11 +614,7 @@ async function syncTest() {
 function startSyncPolling() {
   if (syncInterval) clearInterval(syncInterval);
   syncInterval = setInterval(async () => {
-    try {
-      syncDownload();
-      var cp=getSyncPayload();
-      if(cp!==lastSyncData){lastSyncData=cp;refreshAll();}
-    }catch(e){}
+    try{await syncDownload();}catch(e){}
   }, 5000);
 }
 
@@ -783,12 +779,13 @@ function importTutorData(){
   alert("✅ 成功导入 46 条导师关系数据，并自动同步了 "+cnt+" 个电话到学生档案！");
 }
 
-  window.onload=function(){
+  window.onload=async function(){
+  // 先等同步完成再渲染
+  try{await syncDownload();ensureLocalScores();}catch(e){}
   try{refreshAll()}catch(e){}
   switchPage("home");
   var t=document.getElementById("nowTime");if(t)t.textContent=new Date().toLocaleString('zh-CN');
   startSyncPolling();
-  setTimeout(function(){syncDownload();},500);
   };
   };
   </script>
