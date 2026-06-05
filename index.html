@@ -528,9 +528,25 @@ async function down(){try{var r=await fetch('https://phkeqohmymnrvzbmjjrh.supaba
 // 编辑中跳过同步
 if(document.querySelector('.modal[style*="flex"]'))return;
 var ch=0;
-if(dd.pu&&dd.pu.length>puArr.length){puArr=dd.pu;localStorage.setItem(KEY_PU,JSON.stringify(puArr));ch=1;}
-if(dd.at&&dd.at.length>atArr.length){atArr=dd.at;localStorage.setItem(KEY_AT,JSON.stringify(atArr));ch=1;}
-if(dd.log&&dd.log.length>logArr.length){logArr=dd.log;localStorage.setItem(KEY_LOG,JSON.stringify(logArr));ch=1;}
+if(dd.pu&&dd.pu.length>puArr.length){
+  // 合并云端新增的违纪记录，不覆盖本地
+  dd.pu.forEach(function(cr){
+    if(!puArr.some(function(lr){return lr.date===cr.date&&lr.name===cr.name&&lr.type===cr.type;}))puArr.push(cr);
+  });
+  localStorage.setItem(KEY_PU,JSON.stringify(puArr));ch=1;
+}
+if(dd.at&&dd.at.length>atArr.length){
+  dd.at.forEach(function(cr){
+    if(!atArr.some(function(lr){return lr.date===cr.date&&lr.name===cr.name&&lr.status===cr.status;}))atArr.push(cr);
+  });
+  localStorage.setItem(KEY_AT,JSON.stringify(atArr));ch=1;
+}
+if(dd.log&&dd.log.length>logArr.length){
+  dd.log.forEach(function(cr){
+    if(!logArr.some(function(lr){return lr.date===cr.date&&lr.content===cr.content;}))logArr.push(cr);
+  });
+  localStorage.setItem(KEY_LOG,JSON.stringify(logArr));ch=1;
+}
 ss('ok');if(ch)refreshAll();
 }catch(e){ss('no');}}
 function syncTest(){ss('busy');fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?select=id&id=eq.pingtest',{headers:{'apikey':'sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Authorization':'Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd'}}).then(function(r){if(r.ok){ss('ok');alert('连接成功！');}else{ss('no');alert('无法连接');}}).catch(function(){ss('no');alert('无法连接');});}
@@ -656,7 +672,8 @@ function openPuModal(){document.getElementById("puModal").style.display="flex";d
 function loadPuImg(e){const f=e.target.files[0];if(!f||f.size>5*1024*1024)return alert("图片超过 5MB");const r=new FileReader();r.onload=ev=>{document.getElementById("pu_img_data").value=ev.target.result;document.getElementById("pu_img_preview").innerHTML=`<img src="${ev.target.result}" style="max-width:200px;max-height:120px;border-radius:8px;margin-top:4px;box-shadow:0 2px 8px rgba(0,0,0,0.1)">`;document.getElementById("pu_img_preview").style.display="block";};r.readAsDataURL(f);}
 function savePu(){const d={date:document.getElementById("pu_date").value,name:document.getElementById("pu_name").value.trim(),type:document.getElementById("pu_type").value.trim(),note:document.getElementById("pu_note").value.trim(),img:document.getElementById("pu_img_data").value};if(!d.date||!d.name)return alert("日期和姓名不能为空");if(puEditIdx!==null)puArr[puEditIdx]=d;else puArr.push(d);localStorage.setItem(KEY_PU,JSON.stringify(puArr));closeAllModal();refreshAll();syncUpload();}
 function renderPu(){document.getElementById("puTable").innerHTML=puArr.map((i,idx)=>`<tr><td>${i.date}</td><td><strong>${i.name}</strong></td><td><span class="badge badge-red">${i.type}</span></td><td>${i.note||"-"}</td><td>${i.img?`<img src="${i.img}" style="width:60px;height:40px;object-fit:cover;border-radius:6px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.1)" onclick="viewPuImg('${i.img}')">`:"-"}</td><td><button class="btn btn-ghost" onclick="editPu(${idx})" style="padding:3px 12px;font-size:12px">修改</button><button class="btn btn-danger" onclick="delPu(${idx})" style="padding:3px 12px;font-size:12px">删除</button></td></tr>`).join("")||'<tr><td colspan="6"><div class="empty-state">暂无违纪记录</div></td></tr>';}
-function editPu(idx){const s=puArr[idx];document.getElementById("pu_date").value=s.date;document.getElementById("pu_name").value=s.name;document.getElementById("pu_type").value=s.type;document.getElementById("pu_note").value=s.note||"";const pre=document.getElementById("pu_img_preview"),img=document.getElementById("pu_img_data");if(s.img){img.value=s.img;pre.innerHTML=`<img src="${s.img}" style="max-width:200px;max-height:120px;border-radius:8px;margin-top:4px;box-shadow:0 2px 8px rgba(0,0,0,0.1)"><div style="font-size:12px;color:var(--text3);margin-top:4px">已上传图片</div>`;pre.style.display="block";}else{img.value="";pre.innerHTML="";pre.style.display="none";}puEditIdx=idx;}
+function editPu(idx){try{var s=puArr[idx];if(!s)return;document.getElementById("pu_date").value=s.date;document.getElementById("pu_name").value=s.name;document.getElementById("pu_type").value=s.type;document.getElementById("pu_note").value=s.note||"";var pre=document.getElementById("pu_img_preview"),img=document.getElementById("pu_img_data");if(s.img){img.value=s.img;pre.innerHTML='<img src="'+s.img+'" style="max-width:200px;max-height:120px;border-radius:8px;margin-top:4px;box-shadow:0 2px 8px rgba(0,0,0,0.1)"><div style="font-size:12px;color:var(--text3);margin-top:4px">已上传图片</div>';pre.style.display="block";}else{img.value="";pre.innerHTML="";pre.style.display="none";}puEditIdx=idx;document.getElementById("puModal").style.display="flex";}catch(e){alert('操作失败，请刷新页面重试');}}
+function delPu(idx){try{if(!puArr[idx])return;if(!confirm("确定删除该违纪记录？"))return;puArr.splice(idx,1);localStorage.setItem(KEY_PU,JSON.stringify(puArr));refreshAll();syncUpload();}catch(e){alert('操作失败，请刷新页面重试');}}
 function delPu(idx){if(!confirm("确定删除该违纪记录？"))return;puArr.splice(idx,1);localStorage.setItem(KEY_PU,JSON.stringify(puArr));refreshAll();syncUpload();}
 function viewPuImg(src){document.getElementById("imgModalContent").src=src;document.getElementById("imgModal").style.display="flex";}
 function openLogModal(){document.getElementById("log_date").value=new Date().toISOString().split("T")[0];const n=new Date();document.getElementById("log_time").value=String(n.getHours()).padStart(2,"0")+":"+String(n.getMinutes()).padStart(2,"0");document.getElementById("log_content").value="";logEditIdx=null;document.getElementById("logModal").style.display="flex";}
