@@ -530,8 +530,12 @@ let syncEnabled = false;
 function loadSyncConfig() {
   const url = localStorage.getItem(SYNC_URL_KEY) || '';
   const key = localStorage.getItem(SYNC_KEY_KEY) || '';
-  if (document.getElementById('syncUrl')) document.getElementById('syncUrl').value = url;
-  if (document.getElementById('syncKey')) document.getElementById('syncKey').value = key;
+  // 仅在首次加载时填充输入框
+  if (!document.getElementById('syncUrl').dataset.loaded) {
+    if (document.getElementById('syncUrl')) document.getElementById('syncUrl').value = url;
+    if (document.getElementById('syncKey')) document.getElementById('syncKey').value = key;
+    document.getElementById('syncUrl').dataset.loaded = '1';
+  }
   return { url, key };
 }
 
