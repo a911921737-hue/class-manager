@@ -634,6 +634,8 @@ let scoreArr=JSON.parse(localStorage.getItem(KEY_SCORE))||initScoreData;
 // 确保2026期中考试 和 2026上学期期末考 数据存在（硬编码备份）
 (function mergeScores(){
   var s=scoreArr;
+  // 如果有任何旧名数据，强制重命名到2026期中考试
+  var hasOld=s.some(function(x){return x.exam==='2026四月联考'||x.exam==='2026年4月联考'||x.exam==='2026年期中考试';});
   // 重命名旧考试名称
   s.forEach(function(x){
     if(x.exam==='2026四月联考'||x.exam==='2026年4月联考'||x.exam==='2026年期中考试')x.exam='2026期中考试';
