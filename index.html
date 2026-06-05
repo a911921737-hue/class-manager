@@ -279,8 +279,8 @@ textarea.form-input { resize: vertical; min-height: 100px; line-height: 1.6; }
         </div>
         <div class="section-body">
           <div class="stat-row">
+            <div class="stat-card"><p>👤 班级总人数</p><h2 id="allStu">0</h2></div>
             <div class="stat-card"><p>📖 考试次数</p><h2 id="examCount">0</h2></div>
-            <div class="stat-card"><p>👩‍🏫 导师人数</p><h2 id="tutorCount">0</h2></div>
             <div class="stat-card"><p>⚠️ 违纪记录</p><h2 id="punishCount">0</h2></div>
           </div>
         </div>
@@ -734,6 +734,7 @@ function renderLog(){const arr=[...logArr].reverse();if(!arr.length){document.ge
 function showExamRank(examName){const sel=document.getElementById("sc_exam_selector");if(sel){for(let i=0;i<sel.options.length;i++){if(sel.options[i].value===examName){sel.selectedIndex=i;break;}}}switchPage("score");}
 function refreshAll(){
   initExamSelector();renderStu();renderSc();loadDailyAt();renderPu();renderLog();renderTutor();
+  document.getElementById("allStu").textContent=stuArr.length;
   document.getElementById("examCount").textContent=[...new Set(scoreArr.map(x=>x.exam))].length;
   document.getElementById("tutorCount").textContent=[...new Set(tutorArr.map(x=>x.tutor))].length;
   document.getElementById("punishCount").textContent=puArr.length;
