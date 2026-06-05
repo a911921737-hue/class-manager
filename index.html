@@ -4,7 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>班级综合管理</title>
-<script>if(localStorage.getItem('stuData')&&JSON.parse(localStorage.getItem('stuData')).length<10)localStorage.removeItem('stuData');</script>
+<script>if(localStorage.getItem('stuData')&&JSON.parse(localStorage.getItem('stuData')).length<10)localStorage.removeItem('stuData');
+if(localStorage.getItem('scoreData')&&JSON.parse(localStorage.getItem('scoreData')).length<20)localStorage.removeItem('scoreData');
+if(localStorage.getItem('tutorData')&&JSON.parse(localStorage.getItem('tutorData')).length<40)localStorage.removeItem('tutorData');
+</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <style>
 
@@ -780,13 +783,19 @@ function importTutorData(){
 }
 
   window.onload=function(){
-  // 先渲染本地数据，用户立即能看到
-  try{ensureLocalScores();}catch(e){}
+  // 强制清除损坏的本地数据，确保从硬编码数据恢复
+  try{localStorage.removeItem('tutorData');}catch(e){}
+  // 先渲染本地数据
+  try{
+    if(stuArr.length<45){stuArr=JSON.parse(JSON.stringify(initStuData));localStorage.setItem(KEY_STU,JSON.stringify(stuArr));}
+    if(scoreArr.length<20){scoreArr=JSON.parse(JSON.stringify(initScoreData));localStorage.setItem(KEY_SCORE,JSON.stringify(scoreArr));}
+    ensureLocalScores();
+  }catch(e){}
   try{refreshAll()}catch(e){}
   switchPage("home");
   var t=document.getElementById("nowTime");if(t)t.textContent=new Date().toLocaleString('zh-CN');
   startSyncPolling();
-  // 后台拉取云端数据（不阻塞页面）
+  // 后台拉取云端数据
   setTimeout(function(){
     syncDownload().then(function(){try{ensureLocalScores();refreshAll();}catch(e){}}).catch(function(){});
   }, 200);
