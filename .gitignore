@@ -6,3 +6,10 @@ server/data.json
 check_header.txt
 pland.md
 .reasonix/
+.codegraph/
+netlify/
+deploy.html
+netlify-index.html
+netlify-deploy.html
+*.py
+*.js
