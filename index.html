@@ -411,17 +411,14 @@ textarea.form-input { resize: vertical; min-height: 100px; line-height: 1.6; }
           <div class="form-item"><label>同步服务器地址</label><input class="form-input" id="syncUrl" placeholder="https://celadon-tarsier-b90204.netlify.app" style="font-family:monospace;font-size:13px"></div>
           <div class="form-item"><label>班级同步密钥</label><input class="form-input" id="syncKey" placeholder="输入一个唯一标识，如 class2025" style="font-family:monospace;font-size:13px"></div>
           <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-            <button class="btn btn-primary" onclick="smartSyncTest()">测试连接</button>
-            <button class="btn btn-success" onclick="smartSyncUpload()">手动上传到云端</button>
-            <button class="btn btn-ghost" onclick="smartSyncDownload()">手动从云端拉取</button>
+            <button class="btn btn-primary" onclick="syncTest()">测试连接</button>
+            <button class="btn btn-success" onclick="syncUpload()">手动上传到云端</button>
+            <button class="btn btn-ghost" onclick="syncDownload()">手动从云端拉取</button>
           </div>
           <div style="margin-top:16px;padding:12px;background:var(--blue-light);border-radius:10px;font-size:13px;line-height:1.6;color:var(--text2)">
-            <strong>💡 使用说明</strong><br>
-            1. 先部署后端（Render），拿到服务器地址<br>
-            2. 填入上方「服务器地址」和「班级密钥」<br>
-            3. 点击「测试连接」确认成功<br>
-            4. 保存数据后自动同步到云端，其他设备打开同一链接后自动拉取<br>
-            5. 同密钥的设备共享数据，不同密钥的班级数据隔离
+            <strong>💡 自动同步</strong><br>
+            数据自动通过 Supabase 云端同步，无需手动操作。<br>
+            保存数据后自动上传，其他设备刷新后自动拉取。
           </div>
         </div>
       </div>
@@ -583,174 +580,48 @@ function fetchWithTimeout(url, opt, ms) {
 }
 
 async function syncUpload() {
-  setSyncStatus('syncing');
-  try{if(await sbUpload()){lastSyncData=getSyncPayload();setSyncStatus('connected');return;}}catch(e){}
-  try {
-    const { url, key } = saveSyncConfig();
-    if (url && key) {
-    const payload = getSyncPayload();
-    const res = await fetchWithTimeout(url + '/api/data?key=' + encodeURIComponent(key), {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: payload,
-    }, 10000);
-    if (res.ok) {
-      lastSyncData = payload;
-      setSyncStatus('connected');
-    } else {
-      setSyncStatus('disconnected');
-    }}
-  } catch (e) {
-    setSyncStatus('disconnected');
-  }
-}
+  setSyncStatus("syncing");
+  try{var p=JSON.parse(getSyncPayload());var h={"apikey":"sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd","Authorization":"Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd","Content-Type":"application/json"};
+  var ex=await fetch("https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?select=id&id=eq.class2025",{method:"GET",headers:h});
+  var x=await ex.json();
+  if(x&&x.length>0){await fetch("https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?id=eq.class2025",{method:"PATCH",headers:{"apikey":"sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd","Authorization":"Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd","Content-Type":"application/json","Prefer":"resolution=merge-duplicates"},body:JSON.stringify({data:p,updated_at:new Date().toISOString()})});}
+  else{await fetch("https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data",{method:"POST",headers:h,body:JSON.stringify({id:"class2025",data:p,updated_at:new Date().toISOString()})});}
+  lastSyncData=getSyncPayload();setSyncStatus("connected");}catch(e){setSyncStatus("disconnected");}}
 async function syncDownload() {
-  setSyncStatus('syncing');
-  // 先试Supabase直连
-  const data = await sbDownload();
-  if (data) {
-    if (data.stu && data.stu.length>stuArr.length) { stuArr = data.stu; localStorage.setItem(KEY_STU, JSON.stringify(data.stu)); }
-    if (data.score && data.score.length>scoreArr.length) { scoreArr = data.score; localStorage.setItem(KEY_SCORE, JSON.stringify(data.score)); }
-    if (data.at && data.at.length>0) { atArr = data.at; localStorage.setItem(KEY_AT, JSON.stringify(data.at)); }
-    if (data.pu && data.pu.length>0) { puArr = data.pu; localStorage.setItem(KEY_PU, JSON.stringify(data.pu)); }
-    if (data.log && data.log.length>0) { logArr = data.log; localStorage.setItem(KEY_LOG, JSON.stringify(data.log)); }
-    if (data.tutor && data.tutor.length>0) { tutorArr = data.tutor; localStorage.setItem(KEY_TUTOR, JSON.stringify(data.tutor)); }
-    lastSyncData = getSyncPayload(); setSyncStatus('connected'); refreshAll(); return true;
-  }
-  // Supabase失败，用API
-  const { url, key } = saveSyncConfig();
-  if (!url || !key) { setSyncStatus('disconnected'); return false; }
-  try {
-    const res = await fetchWithTimeout(url + '/api/data?key=' + encodeURIComponent(key), {}, 10000);
-    if (!res.ok) { setSyncStatus('disconnected'); return false; }
-    const data = await res.json();
-    if (!data) { setSyncStatus('connected'); return false; }
-    if (data.stu && data.stu.length>stuArr.length) { stuArr = data.stu; localStorage.setItem(KEY_STU, JSON.stringify(data.stu)); }
-    if (data.score && data.score.length>scoreArr.length) { scoreArr = data.score; localStorage.setItem(KEY_SCORE, JSON.stringify(data.score)); }
-    if (data.at && data.at.length>0) { atArr = data.at; localStorage.setItem(KEY_AT, JSON.stringify(data.at)); }
-    if (data.pu && data.pu.length>0) { puArr = data.pu; localStorage.setItem(KEY_PU, JSON.stringify(data.pu)); }
-    if (data.log && data.log.length>0) { logArr = data.log; localStorage.setItem(KEY_LOG, JSON.stringify(data.log)); }
-    if (data.tutor && data.tutor.length>0) { tutorArr = data.tutor; localStorage.setItem(KEY_TUTOR, JSON.stringify(data.tutor)); }
-    lastSyncData = getSyncPayload();
-    setSyncStatus('connected');
-    refreshAll();
-    return true;
-  } catch (e) {
-    setSyncStatus('disconnected');
-    return false;
-  }
-}
+  setSyncStatus("syncing");
+  try{var h={"apikey":"sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd","Authorization":"Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd"};
+  var r=await fetch("https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?select=data&id=eq.class2025",{method:"GET",headers:h});
+  var d=await r.json();
+  if(d&&d.length>0&&d[0].data){var da=d[0].data;
+  if(da.stu&&da.stu.length>stuArr.length){stuArr=da.stu;localStorage.setItem(KEY_STU,JSON.stringify(da.stu));}
+  if(da.score&&da.score.length>scoreArr.length){scoreArr=da.score;localStorage.setItem(KEY_SCORE,JSON.stringify(da.score));}
+  if(da.at&&da.at.length>0){atArr=da.at;localStorage.setItem(KEY_AT,JSON.stringify(da.at));}
+  if(da.pu&&da.pu.length>0){puArr=da.pu;localStorage.setItem(KEY_PU,JSON.stringify(da.pu));}
+  if(da.log&&da.log.length>0){logArr=da.log;localStorage.setItem(KEY_LOG,JSON.stringify(da.log));}
+  if(da.tutor&&da.tutor.length>0){tutorArr=da.tutor;localStorage.setItem(KEY_TUTOR,JSON.stringify(da.tutor));}
+  lastSyncData=getSyncPayload();setSyncStatus("connected");refreshAll();return true;}}catch(e){}
+  setSyncStatus("disconnected");return false;}
 
 async function syncTest() {
-  // 先试Supabase
-  setSyncStatus('syncing');
+  setSyncStatus("syncing");
   try {
-    const r = await sbFetch('GET', '/rest/v1/class_sync_data?select=id&id=eq.pingtest');
-    if (r.ok) { setSyncStatus('connected'); alert('✅ 连接成功！数据已就绪。'); return; }
+    var r=await fetch("https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?select=id&id=eq.pingtest",{method:"GET",headers:{"apikey":"sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd","Authorization":"Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd"}});
+    if (r.ok) { setSyncStatus("connected"); alert("✅ 连接成功！"); return; }
   } catch(e) {}
-  // 试API
-  const { url, key } = saveSyncConfig();
-  if (!url || !key) return alert('请先填写服务器地址和班级密钥');
-  setSyncStatus('syncing');
-  try {
-    const res = await fetchWithTimeout(url + '/api/data?key=pingtest', {}, 8000);
-    if (res.ok) {
-      setSyncStatus('connected');
-      alert('✅ 连接成功！服务器已就绪。');
-    } else {
-      setSyncStatus('disconnected');
-      alert('❌ 服务器返回异常，请检查地址。');
-    }
-  } catch (e) {
-    setSyncStatus('disconnected');
-    alert('❌ 无法连接到服务器：' + e.message);
-  }
+  setSyncStatus("disconnected");alert("❌ 无法连接到服务器");
 }
 
 function startSyncPolling() {
   if (syncInterval) clearInterval(syncInterval);
   syncInterval = setInterval(async () => {
     try {
-      // 先试Supabase直连
-      var d=await sbDownload();
-      if(d){
-        var cp=getSyncPayload();
-        if(cp===lastSyncData)return;
-        applySyncData(d);
-        lastSyncData=cp;
-        setSyncStatus('connected');
-        refreshAll();
-        return;
-      }
+      syncDownload();
+      var cp=getSyncPayload();
+      if(cp!==lastSyncData){lastSyncData=cp;refreshAll();}
     }catch(e){}
-    // 失败后用API
-    const { url, key } = loadSyncConfig();
-    if (!url || !key) return;
-    try {
-      const res = await fetchWithTimeout(url + '/api/data?key=' + encodeURIComponent(key), {}, 5000);
-      if (!res.ok) return;
-      const data = await res.json();
-      if (!data) return;
-      const currentPayload = getSyncPayload();
-      if (currentPayload === lastSyncData) return;
-      applySyncData(data);
-      lastSyncData = currentPayload;
-      setSyncStatus('connected');
-      refreshAll();
-    } catch (e) {}
   }, 5000);
 }
 
-// ===== Supabase直连同步（使用fetch REST API，不依赖后端）=====
-const SB_URL = 'https://phkeqohmymnrvzbmjjrh.supabase.co';
-const SB_KEY = 'sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd';
-
-async function sbFetch(method, path, body) {
-  const opt = { method, headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' } };
-  if (body) opt.body = JSON.stringify(body);
-  const r = await fetch(SB_URL + path, opt);
-  const txt = await r.text();
-  try { return { ok: r.ok, data: JSON.parse(txt) }; } catch { return { ok: r.ok, data: txt }; }
-}
-
-async function sbUpload() {
-  try {
-    const payload = JSON.parse(getSyncPayload());
-    // 检查是否存在
-    const exist = await sbFetch('GET', '/rest/v1/class_sync_data?select=id&id=eq.class2025');
-    if (exist.ok && exist.data && exist.data.length > 0) {
-      const r = await sbFetch('PATCH', '/rest/v1/class_sync_data?id=eq.class2025', { data: payload, updated_at: new Date().toISOString() });
-      if (!r.ok) return false;
-    } else {
-      const r = await sbFetch('POST', '/rest/v1/class_sync_data', { id: 'class2025', data: payload, updated_at: new Date().toISOString() });
-      if (!r.ok) return false;
-    }
-    return true;
-  } catch (e) { return false; }
-}
-
-async function sbDownload() {
-  try {
-    const r = await sbFetch('GET', '/rest/v1/class_sync_data?select=data&id=eq.class2025');
-    if (r.ok && r.data && r.data.length > 0) return r.data[0].data;
-    return null;
-  } catch (e) { return null; }
-}
-
-// 智能同步（先Supabase直连，失败用API）
-async function smartSyncUpload() { setSyncStatus('syncing'); if (await sbUpload()) { lastSyncData = getSyncPayload(); setSyncStatus('connected'); return; } await syncUpload(); }
-async function smartSyncDownload() { setSyncStatus('syncing'); var d=await sbDownload(); if(d){applySyncData(d);lastSyncData=getSyncPayload();setSyncStatus('connected');refreshAll();return;} await syncDownload(); }
-async function smartSyncTest() { setSyncStatus('syncing'); try{var r=await sbFetch('GET','/rest/v1/class_sync_data?select=id&id=eq.pingtest');if(r.ok){setSyncStatus('connected');alert('✅ 连接成功！');return;}}catch(e){} syncTest(); }
-
-// 通用应用到本地数据
-function applySyncData(data){
-  if (data.stu && data.stu.length > stuArr.length) { stuArr = data.stu; localStorage.setItem(KEY_STU, JSON.stringify(data.stu)); }
-  if (data.score && data.score.length > scoreArr.length) { scoreArr = data.score; localStorage.setItem(KEY_SCORE, JSON.stringify(data.score)); }
-  if (data.at && data.at.length > 0) { atArr = data.at; localStorage.setItem(KEY_AT, JSON.stringify(data.at)); }
-  if (data.pu && data.pu.length > 0) { puArr = data.pu; localStorage.setItem(KEY_PU, JSON.stringify(data.pu)); }
-  if (data.log && data.log.length > 0) { logArr = data.log; localStorage.setItem(KEY_LOG, JSON.stringify(data.log)); }
-  if (data.tutor && data.tutor.length > 0) { tutorArr = data.tutor; localStorage.setItem(KEY_TUTOR, JSON.stringify(data.tutor)); }
-}
 
 const KEY_STU="stuData",KEY_SCORE="scoreData",KEY_AT="attendData",KEY_PU="punishData",KEY_LOG="logData",KEY_TUTOR="tutorData";
 const initStuData=[
@@ -916,19 +787,9 @@ function importTutorData(){
   try{refreshAll()}catch(e){}
   switchPage("home");
   var t=document.getElementById("nowTime");if(t)t.textContent=new Date().toLocaleString('zh-CN');
-  loadSyncConfig();startSyncPolling();
-  // 同步加超时，失败不影响页面使用
-  setTimeout(function(){
-    var su=loadSyncConfig();
-    if(su.url&&su.key){
-      smartSyncDownload().then(function(){
-        try{ensureLocalScores();refreshAll();}catch(e){}
-        setSyncStatus('connected');
-      }).catch(function(){
-        setSyncStatus('disconnected');
-      });
-    }
-  },300);
+  startSyncPolling();
+  setTimeout(function(){syncDownload();},500);
+  };
   };
   </script>
   <script>
