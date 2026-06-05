@@ -50,19 +50,27 @@ module.exports = async (req, res) => {
   try {
     if (req.method === 'GET') {
       const result = await supabaseFetch('GET', `/rest/v1/class_sync_data?select=data&id=eq.${encodeURIComponent(key)}`);
-      if (result.status >= 200 && result.status < 300 && result.data && result.data.length > 0) {
+      // 检查 Supabase 是否返回了错误
+      if (result.status >= 400) {
+        return res.status(502).json({ error: 'Supabase 错误: ' + (typeof result.data === 'object' ? JSON.stringify(result.data) : result.data) });
+      }
+      if (result.data && result.data.length > 0) {
         return res.json(result.data[0].data);
       }
       return res.json(null);
     }
     if (req.method === 'PUT') {
       const existing = await supabaseFetch('GET', `/rest/v1/class_sync_data?select=id&id=eq.${encodeURIComponent(key)}`);
+      let result;
       if (existing.status >= 200 && existing.status < 300 && existing.data && existing.data.length > 0) {
-        await supabaseFetch('PATCH', `/rest/v1/class_sync_data?id=eq.${encodeURIComponent(key)}`,
+        result = await supabaseFetch('PATCH', `/rest/v1/class_sync_data?id=eq.${encodeURIComponent(key)}`,
           { data: req.body, updated_at: new Date().toISOString() });
       } else {
-        await supabaseFetch('POST', '/rest/v1/class_sync_data',
+        result = await supabaseFetch('POST', '/rest/v1/class_sync_data',
           { id: key, data: req.body, updated_at: new Date().toISOString() });
+      }
+      if (result.status >= 400) {
+        return res.status(502).json({ error: 'Supabase 错误: ' + (typeof result.data === 'object' ? JSON.stringify(result.data) : result.data) });
       }
       return res.json({ ok: true });
     }
