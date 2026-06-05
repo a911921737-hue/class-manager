@@ -2,49 +2,45 @@
 
 一个纯前端班级管理系统，支持**手机 ↔ 电脑自动同步**。
 
-## 如何部署同步后端
+**架构**：前端（index.html）→ Vercel 云函数 → Supabase 数据库
 
-### 1. 推送代码到 GitHub
+## 如何部署
 
-```bash
-git init
-git add .
-git commit -m "班级管理系统 + 云端同步后端"
-git remote add origin https://github.com/你的用户名/你的仓库名.git
-git push -u origin main
-```
+### 1. 在 Supabase 创建数据库（已完成 ✅）
 
-> 如果你还没有 GitHub 账号，先去 [github.com](https://github.com) 注册。  
-> 创建一个新仓库（New repository），名称随意（如 `class-manager`）。  
-> 创建后把上面命令中的「你的用户名/你的仓库名」换成你实际的。
+- 项目名称：`class-manager`
+- 数据库密码：`!SuE1105!1105`
+- 连接字符串已就绪
 
-### 2. 在 Render 部署
+### 2. 在 Vercel 部署
 
-1. 打开 [render.com](https://render.com) → 用 GitHub 登录
-2. 点 **New +** → **Web Service**
-3. 连接你的 GitHub，选择刚创建的仓库
-4. 填写：
-   - **Name**: `class-manager-sync`
-   - **Region**: 选离你近的（新加坡或美国）
-   - **Branch**: `main`
-   - **Root Directory**: `server`
-   - **Build Command**: `npm install`
-   - **Start Command**: `npm start`
-   - **Plan**: Free
-5. 点 **Create Web Service**
-6. 等 2-3 分钟，部署完成后会显示一个 URL，如 `https://class-manager-sync.onrender.com`
+1. 打开 [vercel.com](https://vercel.com) → 用 **GitHub** 登录
+2. 点 **Add New…** → **Project**
+3. 选择 **a911921737-hue/class-manager** 仓库
+4. 在配置页面点 **Environment Variables** → 添加：
+   - **Name**: `DATABASE_URL`
+   - **Value**: `postgresql://postgres:%21SuE1105%211105@db.phkeqohmymnrvzbmjjrh.supabase.co:5432/postgres`
+5. **Framework Preset** 保持默认（Other）
+6. 点 **Deploy**（部署）
+7. 部署完成后会得到一个 URL，如 `https://class-manager.vercel.app`
 
-### 3. 配置前端连接到后端
+### 3. 配置前端
 
 1. 打开浏览器访问 `index.html`
 2. 左侧菜单点 **⚙️ 同步设置**
 3. 填入：
-   - **同步服务器地址**: 上一步得到的 URL（如 `https://class-manager-sync.onrender.com`）
+   - **同步服务器地址**: `https://class-manager.vercel.app`（上一步得到的地址）
    - **班级同步密钥**: 随便填一个唯一标识，如 `class2025`
-4. 点 **测试连接**，显示「连接成功」即完成
-5. 手机和电脑填相同的地址和密钥，数据就会自动同步
+4. 点 **测试连接**，显示「连接成功」就完成了
 
-### 4. 共享给其他人
+### 4. 分享给其他人
 
 将 `index.html` 拖到 [app.netlify.com/drop](https://app.netlify.com/drop) 部署，
 得到一个公网链接，其他人打开后填入相同的服务器地址和密钥即可共用数据。
+
+### 5. 数据说明
+
+- 所有数据保存在 Supabase 云数据库中
+- 修改数据后自动保存到云端
+- 每 5 秒轮询检查是否有其他设备修改了数据
+- 界面角落显示同步状态（已同步/同步中/未连接）

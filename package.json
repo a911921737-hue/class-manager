@@ -1,0 +1,11 @@
+{
+  "name": "class-manager",
+  "version": "1.0.0",
+  "description": "班级管理系统 - Vercel 云函数 + Supabase",
+  "scripts": {
+    "start": "node server/server.js"
+  },
+  "dependencies": {
+    "pg": "^8.13.0"
+  }
+}
