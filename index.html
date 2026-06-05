@@ -736,18 +736,25 @@ function refreshAll(){
   initExamSelector();renderStu();renderSc();loadDailyAt();renderPu();renderLog();renderTutor();
   document.getElementById("allStu").textContent=stuArr.length;
   document.getElementById("examCount").textContent=[...new Set(scoreArr.map(x=>x.exam))].length;
-  document.getElementById("tutorCount").textContent=[...new Set(tutorArr.map(x=>x.tutor))].length;
   document.getElementById("punishCount").textContent=puArr.length;
   const ep=document.getElementById("examPreview");
-  if(ep&&scoreArr.length){
-    const order=['2026年5月联考','2026期中考试','2026上学期期末考'];
-    const allExams=order.filter(e=>scoreArr.some(x=>x.exam===e&&x.total));
-    ep.innerHTML=allExams.map(function(e){
-      const s=scoreArr.filter(x=>x.exam===e).sort((a,b)=>b.total-a.total);
-      if(!s.length)return '';
-      const t3=s.slice(0,3),avg=(s.reduce((a,x)=>a+x.total,0)/s.length).toFixed(1);
-      return `<div style="margin-bottom:12px;padding:12px 16px;border-radius:10px;background:var(--surface-solid);border:0.5px solid var(--line2)"><strong>${e}</strong> · ${s.length}人 · 最高${s[0].total}分 · 最低${s[s.length-1].total}分 · 平均${avg}分<div class="exam-top3">🏆 前三：${t3.map(x=>x.name+'（'+x.total+'分）').join(' ')}</div><button class="btn btn-ghost" onclick="showExamRank('${e}')" style="margin-top:6px;font-size:11px">查看排名</button></div>`;
-    }).join('');
+  if(ep){
+    if(scoreArr&&scoreArr.length){
+      var o=['2026年5月联考','2026期中考试','2026上学期期末考'];
+      var exams=o.filter(function(e){return scoreArr.some(function(x){return x.exam===e&&x.total;});});
+      if(exams.length){
+        ep.innerHTML=exams.map(function(e){
+          var s=scoreArr.filter(function(x){return x.exam===e;}).sort(function(a,b){return b.total-a.total;});
+          if(!s.length)return '';
+          var t3=s.slice(0,3),avg=(s.reduce(function(a,x){return a+x.total;},0)/s.length).toFixed(1);
+          return '<div style="margin-bottom:12px;padding:12px 16px;border-radius:10px;background:var(--surface-solid);border:0.5px solid var(--line2)"><strong>'+e+'</strong> · '+s.length+'人 · 最高'+s[0].total+'分 · 最低'+s[s.length-1].total+'分 · 平均'+avg+'分<div class="exam-top3">🏆 前三：'+t3.map(function(x){return x.name+'('+x.total+'分)';}).join(' ')+'</div><button class="btn btn-ghost" onclick="showExamRank(\''+e+'\')" style="margin-top:6px;font-size:11px">查看排名</button></div>';
+        }).join('');
+      } else {
+        ep.innerHTML='<div class="empty-state">暂无考试数据</div>';
+      }
+    } else {
+      ep.innerHTML='<div class="empty-state">暂无考试数据</div>';
+    }
   }
 }
 function exportScores(){const exam=document.getElementById("sc_exam_selector").value,s=scoreArr.filter(x=>x.exam===exam).sort((a,b)=>b.total-a.total);if(!s.length)return alert("没有可导出的成绩");let csv="\uFEFF排名,姓名,语文,数学,英语,历史,政治,地理,总分\n";s.forEach((s,i)=>{csv+=(i+1)+","+s.name+","+s.yw+","+s.sx+","+s.yy+","+s.ls+","+s.zz+","+s.dl+","+s.total+"\n";});const b=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=exam+" 成绩.csv";a.click();}
