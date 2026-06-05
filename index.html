@@ -779,13 +779,17 @@ function importTutorData(){
   alert("✅ 成功导入 46 条导师关系数据，并自动同步了 "+cnt+" 个电话到学生档案！");
 }
 
-  window.onload=async function(){
-  // 先等同步完成再渲染
-  try{await syncDownload();ensureLocalScores();}catch(e){}
+  window.onload=function(){
+  // 先渲染本地数据，用户立即能看到
+  try{ensureLocalScores();}catch(e){}
   try{refreshAll()}catch(e){}
   switchPage("home");
   var t=document.getElementById("nowTime");if(t)t.textContent=new Date().toLocaleString('zh-CN');
   startSyncPolling();
+  // 后台拉取云端数据（不阻塞页面）
+  setTimeout(function(){
+    syncDownload().then(function(){try{ensureLocalScores();refreshAll();}catch(e){}}).catch(function(){});
+  }, 200);
   };
   };
   </script>
