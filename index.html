@@ -270,7 +270,6 @@ textarea.form-input { resize: vertical; min-height: 100px; line-height: 1.6; }
           <div class="section-title">学生信息</div>
           <div class="btn-group">
             <button class="btn btn-primary" onclick="openStuModal()">新增学生</button>
-            <button class="btn btn-success" onclick="importPhoneFromTutor()">导入导师电话</button>
           </div>
         </div>
         <div class="section-body">
@@ -768,22 +767,6 @@ function importAprilExam(){
   alert("✅ 成功导入 2026期中考试 共 "+data.length+" 条成绩！");
 }
 function clearAllData(){if(!confirm("确定清空全部本地数据？此操作不可恢复！"))return;localStorage.removeItem(KEY_STU);localStorage.removeItem(KEY_SCORE);localStorage.removeItem(KEY_AT);localStorage.removeItem(KEY_PU);localStorage.removeItem(KEY_LOG);localStorage.removeItem(KEY_TUTOR);stuArr=initStuData;scoreArr=initScoreData;atArr=[];puArr=[];logArr=[];tutorArr=[];localStorage.setItem(KEY_STU,JSON.stringify(initStuData));localStorage.setItem(KEY_SCORE,JSON.stringify(initScoreData));refreshAll();syncUpload();}
-
-// 从导师数据导入电话到学生档案（按姓名匹配）
-function importPhoneFromTutor(){
-  if(!tutorArr||tutorArr.length===0)return alert("导师数据为空，请先导入导师数据");
-  let count=0;
-  stuArr.forEach(s=>{
-    const t=tutorArr.find(x=>x.name===s.name);
-    if(t){
-      if(t.tel1){s.tel=t.tel1;count++;}
-      if(t.tel2){s.tel2=t.tel2;count++;}
-    }
-  });
-  localStorage.setItem(KEY_STU,JSON.stringify(stuArr));
-  renderStu();syncUpload();
-  alert("✅ 导入完成！共匹配更新 "+count+" 个电话号码。");
-}
 
 // ===== 导师制函数 =====
 let tutorEditIdx=null;
