@@ -569,17 +569,25 @@ function getSyncPayload() {
   });
 }
 
+// fetch 超时封装
+function fetchWithTimeout(url, opt, ms) {
+  return new Promise(function(resolve, reject) {
+    var t = setTimeout(function(){reject(new Error('timeout'));}, ms||10000);
+    fetch(url, opt).then(function(r){clearTimeout(t);resolve(r);},function(e){clearTimeout(t);reject(e);});
+  });
+}
+
 async function syncUpload() {
   const { url, key } = saveSyncConfig();
   if (!url || !key) { setSyncStatus('disconnected'); return; }
   setSyncStatus('syncing');
   try {
     const payload = getSyncPayload();
-    const res = await fetch(url + '/api/data?key=' + encodeURIComponent(key), {
+    const res = await fetchWithTimeout(url + '/api/data?key=' + encodeURIComponent(key), {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: payload,
-    });
+    }, 10000);
     if (res.ok) {
       lastSyncData = payload;
       setSyncStatus('connected');
@@ -596,7 +604,7 @@ async function syncDownload() {
   if (!url || !key) { setSyncStatus('disconnected'); return false; }
   setSyncStatus('syncing');
   try {
-    const res = await fetch(url + '/api/data?key=' + encodeURIComponent(key));
+    const res = await fetchWithTimeout(url + '/api/data?key=' + encodeURIComponent(key), {}, 10000);
     if (!res.ok) { setSyncStatus('disconnected'); return false; }
     const data = await res.json();
     if (!data) { setSyncStatus('connected'); return false; }
@@ -621,7 +629,7 @@ async function syncTest() {
   if (!url || !key) return alert('请先填写服务器地址和班级密钥');
   setSyncStatus('syncing');
   try {
-    const res = await fetch(url + '/health');
+    const res = await fetchWithTimeout(url + '/health', {}, 8000);
     if (res.ok) {
       setSyncStatus('connected');
       alert('✅ 连接成功！服务器已就绪。');
@@ -641,7 +649,7 @@ function startSyncPolling() {
     const { url, key } = loadSyncConfig();
     if (!url || !key) return;
     try {
-      const res = await fetch(url + '/api/data?key=' + encodeURIComponent(key));
+      const res = await fetchWithTimeout(url + '/api/data?key=' + encodeURIComponent(key), {}, 5000);
       if (!res.ok) return;
       const data = await res.json();
       if (!data) return;
@@ -825,7 +833,18 @@ function importTutorData(){
   switchPage("home");
   var t=document.getElementById("nowTime");if(t)t.textContent=new Date().toLocaleString('zh-CN');
   loadSyncConfig();startSyncPolling();
-  try{syncDownload().then(function(){try{ensureLocalScores();refreshAll();}catch(e){}}).catch(function(){});}catch(e){}
+  // 同步加超时，失败不影响页面使用
+  setTimeout(function(){
+    var su=loadSyncConfig();
+    if(su.url&&su.key){
+      syncDownload().then(function(){
+        try{ensureLocalScores();refreshAll();}catch(e){}
+        setSyncStatus('connected');
+      }).catch(function(){
+        setSyncStatus('disconnected');
+      });
+    }
+  },300);
   };
   </script>
   <script>
