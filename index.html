@@ -353,7 +353,7 @@ textarea.form-input { resize: vertical; min-height: 100px; line-height: 1.6; }
         </div>
         <div class="section-body">
           <div class="search-bar"><input class="search-input" id="tutorSearch" placeholder="搜索学生姓名 / 导师姓名"><button class="btn btn-success" onclick="searchTutor()">搜索</button></div>
-          <div class="table-wrap"><table><thead><tr><th>序号</th><th>学生姓名</th><th>性别</th><th>学生电话1</th><th>学生电话2</th><th>导师姓名</th><th>导师电话</th><th>操作</th></tr></thead><tbody id="tutorTable"></tbody></table></div>
+          <div class="table-wrap"><table><thead><tr><th>序号</th><th>学生姓名</th><th>性别</th><th>家长电话1</th><th>家长电话2</th><th>导师姓名</th><th>导师电话</th><th>操作</th></tr></thead><tbody id="tutorTable"></tbody></table></div>
         </div>
       </div>
     </div>
@@ -464,8 +464,8 @@ textarea.form-input { resize: vertical; min-height: 100px; line-height: 1.6; }
     <div class="modal-title">新增 / 编辑导师关系</div>
     <div class="form-item"><label>学生姓名 *</label><input class="form-input" id="t_name" placeholder="学生姓名"></div>
     <div class="form-item"><label>性别</label><select class="form-input" id="t_sex"><option value="">请选择</option><option>男</option><option>女</option></select></div>
-    <div class="form-item"><label>学生电话1</label><input class="form-input" id="t_tel1" placeholder="学生手机号"></div>
-    <div class="form-item"><label>学生电话2</label><input class="form-input" id="t_tel2" placeholder="家长手机号"></div>
+    <div class="form-item"><label>家长电话1</label><input class="form-input" id="t_tel1" placeholder="家长手机号"></div>
+    <div class="form-item"><label>家长电话2</label><input class="form-input" id="t_tel2" placeholder="家长手机号"></div>
     <div class="form-item"><label>导师姓名 *</label><input class="form-input" id="t_tutor" placeholder="导师姓名"></div>
     <div class="form-item"><label>导师电话</label><input class="form-input" id="t_tutorTel" placeholder="导师手机号"></div>
     <div class="modal-foot"><button class="btn btn-ghost" onclick="closeAllModal()">取消</button><button class="btn btn-primary" onclick="saveTutor()">保存</button></div>
