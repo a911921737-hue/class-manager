@@ -568,6 +568,10 @@ let stuArr=JSON.parse(localStorage.getItem(KEY_STU))||initStuData;
 // 恢复丢失的学生数据
 if(stuArr.length<initStuData.length){stuArr=initStuData.map(function(x){return JSON.parse(JSON.stringify(x));});localStorage.setItem(KEY_STU,JSON.stringify(stuArr));}
 let scoreArr=JSON.parse(localStorage.getItem(KEY_SCORE))||initScoreData;
+// 清理乱码考试（只保留三次有效考试）
+var validExams=['2026年5月联考','2026期中考试','2026上学期期末考'];
+scoreArr=scoreArr.filter(function(s){return validExams.indexOf(s.exam)>=0;});
+localStorage.setItem(KEY_SCORE,JSON.stringify(scoreArr));
 // 数据补充/重命名函数（在同步后调用）
 function ensureLocalScores(){
   var s=JSON.parse(localStorage.getItem(KEY_SCORE))||[];
