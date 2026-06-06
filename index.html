@@ -309,6 +309,7 @@ textarea.form-input { resize: vertical; min-height: 100px; line-height: 1.6; }
           <div class="section-title">学生信息</div>
           <div class="btn-group">
             <button class="btn btn-primary" onclick="openStuModal()">新增学生</button>
+            <button class="btn btn-ghost" onclick="exportStu()">导出</button>
           </div>
         </div>
         <div class="section-body">
@@ -327,6 +328,7 @@ textarea.form-input { resize: vertical; min-height: 100px; line-height: 1.6; }
             <button class="btn btn-ghost" onclick="addExam()">新增考试</button>
             <button class="btn btn-primary" onclick="openScModal()">录入</button>
             <button class="btn btn-success" onclick="exportScores()">导出 CSV</button>
+            <button class="btn btn-ghost" onclick="exportScoreAll()">导出全部</button>
           </div>
         </div>
         <div class="section-body">
@@ -341,6 +343,7 @@ textarea.form-input { resize: vertical; min-height: 100px; line-height: 1.6; }
         <div class="section-header">
           <div class="section-title">每日考勤</div>
           <button class="btn btn-ghost" onclick="openAtModal()">新增记录</button>
+          <button class="btn btn-ghost" onclick="exportAt()">导出</button>
         </div>
         <div class="section-body">
           <div class="search-bar" style="flex-wrap:wrap">
@@ -353,7 +356,8 @@ textarea.form-input { resize: vertical; min-height: 100px; line-height: 1.6; }
         </div>
       </div>
       <div class="section">
-        <div class="section-header"><div class="section-title">考勤历史</div></div>
+        <div class="section-header"><div class="section-title">考勤历史</div>
+          <button class="btn btn-ghost" onclick="exportAtHistory()">导出</button></div>
         <div class="section-body">
           <div class="table-wrap"><table><thead><tr><th>日期</th><th>姓名</th><th>身份证号</th><th>状态</th><th>备注</th><th>操作</th></tr></thead><tbody id="atTable"></tbody></table></div>
         </div>
@@ -392,6 +396,7 @@ textarea.form-input { resize: vertical; min-height: 100px; line-height: 1.6; }
           <div class="btn-group">
             <button class="btn btn-primary" onclick="openTutorModal()">新增</button>
             <button class="btn btn-success" onclick="importTutorData()">从Excel批量导入</button>
+            <button class="btn btn-ghost" onclick="exportTutor()">导出</button>
           </div>
         </div>
         <div class="section-body">
@@ -710,6 +715,13 @@ function refreshAll(){
   }
 }
 function exportScores(){const exam=document.getElementById("sc_exam_selector").value,s=scoreArr.filter(x=>x.exam===exam).sort((a,b)=>b.total-a.total);if(!s.length)return alert("没有可导出的成绩");let csv="\uFEFF排名,姓名,语文,数学,英语,历史,政治,地理,总分\n";s.forEach((s,i)=>{csv+=(i+1)+","+s.name+","+s.yw+","+s.sx+","+s.yy+","+s.ls+","+s.zz+","+s.dl+","+s.total+"\n";});const b=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=exam+" 成绩.csv";a.click();}
+function exportScoreAll(){var csv="\uFEFF考试,姓名,语文,数学,英语,历史,政治,地理,总分\n";scoreArr.sort((a,b)=>a.exam.localeCompare(b.exam)||b.total-a.total).forEach(s=>{csv+=s.exam+","+s.name+","+s.yw+","+s.sx+","+s.yy+","+s.ls+","+s.zz+","+s.dl+","+s.total+"\n";});var b=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="全部成绩.csv";a.click();}
+function exportStu(){var csv="\uFEFF姓名,性别,身份证号,电话1,电话2,家庭住址\n";stuArr.forEach(s=>{csv+=s.name+","+s.sex+","+s.idCard+","+(s.tel||"")+","+(s.tel2||"")+","+(s.address||"")+"\n";});var b=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="学生信息.csv";a.click();}
+function exportAt(){var csv="\uFEFF日期,姓名,身份证号,状态,备注\n";atArr.sort((a,b)=>a.date.localeCompare(b.date)).forEach(s=>{csv+=s.date+","+s.name+","+(s.idCard||"")+","+s.status+","+(s.note||"")+"\n";});var b=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="考勤.csv";a.click();}
+function exportAtHistory(){exportAt();}
+function exportPu(){var csv="\uFEFF日期,姓名,违纪类型,备注\n";puArr.sort((a,b)=>a.date.localeCompare(b.date)).forEach(s=>{csv+=s.date+","+s.name+","+s.type+","+(s.note||"")+"\n";});var b=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="违纪台账.csv";a.click();}
+function exportLog(){var csv="\uFEFF日期,内容\n";logArr.sort((a,b)=>a.date.localeCompare(b.date)).forEach(s=>{csv+=s.date+",\""+(s.content||"").replace(/"/g,'""')+"\"\n";});var b=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="班级日志.csv";a.click();}
+function exportTutor(){var csv="\uFEFF学生姓名,性别,家长电话1,家长电话2,导师姓名,导师电话\n";tutorArr.forEach(s=>{csv+=s.name+","+(s.sex||"")+","+(s.tel1||"")+","+(s.tel2||"")+","+s.tutor+","+(s.tutorTel||"")+"\n";});var b=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="导师关系.csv";a.click();}
 // 导入2026期中考试成绩
 function importAprilExam(){
   if(scoreArr.some(x=>x.exam==="2026期中考试")&&!confirm("四月联考数据已存在，再次导入将覆盖，确定继续？"))return;
