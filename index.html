@@ -542,8 +542,9 @@ if(cv>lv){
     tutorArr=dd.tutor||[];localStorage.setItem(KEY_TUTOR,JSON.stringify(tutorArr));
     localStorage.setItem('_v',cv+'');
     refreshAll();
-  }else if(!hasLocal){
-    localStorage.setItem('_v',cv+'');
+  }else if(hasLocal){
+    // 云端空但本地有数据 → 上传本地数据
+    up();
   }else{
     localStorage.setItem('_v',cv+'');
   }
