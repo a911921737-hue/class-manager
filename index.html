@@ -523,8 +523,9 @@ var syncTimer=null;
 var upTime=0;
 function sbh(){return {'apikey':'sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Authorization':'Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Content-Type':'application/json'};}
 function ss(s){var d=document.getElementById('syncDot'),t=document.getElementById('syncText');if(!d||!t)return;if(s==='ok'){d.style.background='var(--green)';t.textContent='已同步';}else if(s==='busy'){d.style.background='var(--orange)';t.textContent='同步中…';}else{d.style.background='var(--text4)';t.textContent='未连接';}}
+var upBusy=0;
 function ad(){var d={stu:stuArr,score:scoreArr,at:atArr,pu:puArr,log:logArr,tutor:tutorArr,_v:localStorage.getItem('_v')||'0'};return JSON.stringify(d);}
-async function up(){ss('busy');localStorage.setItem('_v',Date.now()+'');try{var p=JSON.parse(ad());var ex=await fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?select=id&id=eq.class2025',{headers:sbh()});var x=await ex.json();if(x&&x.length>0){await fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?id=eq.class2025',{method:'PATCH',headers:{'apikey':'sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Authorization':'Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},body:JSON.stringify({data:p,updated_at:new Date().toISOString()})});}else{await fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data',{method:'POST',headers:sbh(),body:JSON.stringify({id:'class2025',data:p,updated_at:new Date().toISOString()})});}ss('ok');}catch(e){ss('ok');}}
+async function up(){if(upBusy)return;upBusy=1;ss('busy');localStorage.setItem('_v',Date.now()+'');try{var p=JSON.parse(ad());var ex=await fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?select=id&id=eq.class2025',{headers:sbh()});var x=await ex.json();if(x&&x.length>0){await fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?id=eq.class2025',{method:'PATCH',headers:{'apikey':'sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Authorization':'Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},body:JSON.stringify({data:p,updated_at:new Date().toISOString()})});}else{await fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data',{method:'POST',headers:sbh(),body:JSON.stringify({id:'class2025',data:p,updated_at:new Date().toISOString()})});}ss('ok');}catch(e){}ss('ok');upBusy=0;}
 async function down(){try{
 var r=await fetch('https://phkeqohmymnrvzbmjjrh.supabase.co/rest/v1/class_sync_data?select=data&id=eq.class2025',{headers:{'apikey':'sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd','Authorization':'Bearer sb_publishable_LOdsZp6bHXmDu-CYKiN_pw_ixt-RhFd'}});var d=await r.json();if(!d||!d[0]||!d[0].data)return;var dd=d[0].data;ss('ok');
 if(document.querySelector('.modal[style*="flex"]'))return;
@@ -534,16 +535,32 @@ if(cv>lv){
   var hasCloud = !!(dd.pu&&dd.pu.length)||!!(dd.at&&dd.at.length)||!!(dd.log&&dd.log.length)||!!(dd.score&&dd.score.length)||!!(dd.tutor&&dd.tutor.length);
   var hasLocal = !!(puArr&&puArr.length)||!!(atArr&&atArr.length)||!!(logArr&&logArr.length)||!!(scoreArr&&scoreArr.length)||!!(tutorArr&&tutorArr.length);
   if(hasCloud){
-    stuArr=dd.stu||initStuData;localStorage.setItem(KEY_STU,JSON.stringify(stuArr));
-    scoreArr=dd.score||[];localStorage.setItem(KEY_SCORE,JSON.stringify(scoreArr));
-    puArr=dd.pu||[];localStorage.setItem(KEY_PU,JSON.stringify(puArr));
-    atArr=dd.at||[];localStorage.setItem(KEY_AT,JSON.stringify(atArr));
-    logArr=dd.log||[];localStorage.setItem(KEY_LOG,JSON.stringify(logArr));
-    tutorArr=dd.tutor||[];localStorage.setItem(KEY_TUTOR,JSON.stringify(tutorArr));
+    var changed = false;
+    // 学生：补充缺失的
+    if(dd.stu){dd.stu.forEach(function(cr){if(!stuArr.some(function(lr){return lr.idCard===cr.idCard;})){stuArr.push(cr);changed=true;}});if(changed)localStorage.setItem(KEY_STU,JSON.stringify(stuArr));}
+    // 成绩：按考试合并。同考试取条目多的那份
+    if(dd.score){
+      var localExams={};scoreArr.forEach(function(s){localExams[s.exam]=localExams[s.exam]||[];localExams[s.exam].push(s);});
+      var cloudExams={};dd.score.forEach(function(s){cloudExams[s.exam]=cloudExams[s.exam]||[];cloudExams[s.exam].push(s);});
+      Object.keys(cloudExams).forEach(function(e){
+        if(!localExams[e]||cloudExams[e].length>localExams[e].length){
+          scoreArr=scoreArr.filter(function(s){return s.exam!==e;});
+          cloudExams[e].forEach(function(s){scoreArr.push(s);});
+          changed=true;
+        }
+      });
+      if(changed)localStorage.setItem(KEY_SCORE,JSON.stringify(scoreArr));
+    }
+    // 违纪/考勤/日志：补充本地没有的
+    if(dd.pu){dd.pu.forEach(function(cr){if(!puArr.some(function(lr){return lr.date===cr.date&&lr.name===cr.name&&lr.type===cr.type;})){puArr.push(cr);changed=1;}});if(changed)localStorage.setItem(KEY_PU,JSON.stringify(puArr));}
+    if(dd.at){dd.at.forEach(function(cr){if(!atArr.some(function(lr){return lr.date===cr.date&&lr.name===cr.name&&lr.status===cr.status;})){atArr.push(cr);changed=1;}});if(changed)localStorage.setItem(KEY_AT,JSON.stringify(atArr));}
+    if(dd.log){dd.log.forEach(function(cr){if(!logArr.some(function(lr){return lr.date===cr.date&&lr.content===cr.content;})){logArr.push(cr);changed=1;}});if(changed)localStorage.setItem(KEY_LOG,JSON.stringify(logArr));}
+    // 导师：补充缺失的
+    if(dd.tutor){dd.tutor.forEach(function(cr){if(!tutorArr.some(function(lr){return lr.name===cr.name;})){tutorArr.push(cr);changed=true;}});if(changed)localStorage.setItem(KEY_TUTOR,JSON.stringify(tutorArr));}
     localStorage.setItem('_v',cv+'');
-    refreshAll();
+    if(changed)refreshAll();
   }else if(hasLocal){
-    // 云端空但本地有数据 → 上传本地数据
+    localStorage.setItem('_v',cv+'');
     up();
   }else{
     localStorage.setItem('_v',cv+'');
@@ -560,8 +577,7 @@ const initStuData=[
 const initScoreData=[
   {exam:"2026年5月联考",name:"吴子晗",idCard:"320705200909263525",yw:100,sx:97,yy:121,ls:82,zz:77,dl:59,total:536},{exam:"2026年5月联考",name:"朱嘉仪",idCard:"321202201002180122",yw:104,sx:96,yy:83,ls:73,zz:80,dl:89,total:525},{exam:"2026年5月联考",name:"郭玥橦",idCard:"32118320100819486X",yw:112,sx:95,yy:91,ls:71,zz:63,dl:74,total:506},{exam:"2026年5月联考",name:"王欣欣",idCard:"320382201007160100",yw:100,sx:80,yy:89.5,ls:83,zz:70,dl:83,total:505.5},{exam:"2026年5月联考",name:"滕欣然",idCard:"321183201003034824",yw:105,sx:104,yy:75,ls:75,zz:69,dl:77,total:505},{exam:"2026年5月联考",name:"曹秋瑾",idCard:"321183200910244820",yw:106,sx:84,yy:87,ls:73,zz:80,dl:74,total:504},{exam:"2026年5月联考",name:"赵丝格",idCard:"321183200909163820",yw:111,sx:98,yy:83,ls:67,zz:67,dl:74,total:500},{exam:"2026年5月联考",name:"陈亦可",idCard:"32118320100613488X",yw:109,sx:105,yy:77.5,ls:64,zz:65,dl:77,total:497.5},{exam:"2026年5月联考",name:"严雨萱",idCard:"321183200910075588",yw:115,sx:78,yy:94.5,ls:62,zz:67,dl:80,total:496.5},{exam:"2026年5月联考",name:"陈瑞可",idCard:"321183201003300045",yw:109,sx:81,yy:104,ls:63,zz:74,dl:59,total:490},{exam:"2026年5月联考",name:"张俣航",idCard:"321183201003050832",yw:86,sx:91,yy:104,ls:66,zz:61,dl:71,total:479},{exam:"2026年5月联考",name:"纪吴仪",idCard:"321183200910092927",yw:109,sx:75,yy:102,ls:55,zz:67,dl:69,total:477},{exam:"2026年5月联考",name:"徐文萱",idCard:"321183201008064862",yw:105,sx:60,yy:91.5,ls:65,zz:70,dl:77,total:468.5},{exam:"2026年5月联考",name:"陈际舟",idCard:"321183201007220819",yw:87,sx:99,yy:70,ls:67,zz:70,dl:71,total:464},{exam:"2026年5月联考",name:"袁雨霏",idCard:"340223201005282540",yw:104,sx:82,yy:97,ls:56,zz:64,dl:61,total:464},{exam:"2026年5月联考",name:"路永延",idCard:"340823201008240218",yw:100,sx:69,yy:100.5,ls:72,zz:58,dl:61,total:460.5},{exam:"2026年5月联考",name:"焦子萱",idCard:"32118320090926084X",yw:102,sx:79,yy:93.5,ls:66,zz:59,dl:59,total:458.5},{exam:"2026年5月联考",name:"吕煜蕾",idCard:"321183200910220044",yw:97,sx:62,yy:108.5,ls:59,zz:66,dl:66,total:458.5},{exam:"2026年5月联考",name:"雍涵茜",idCard:"321183201001115524",yw:95,sx:86,yy:90.5,ls:69,zz:49,dl:66,total:455.5},{exam:"2026年5月联考",name:"王苏豪",idCard:"321183200909173850",yw:98,sx:90,yy:86.5,ls:69,zz:44,dl:66,total:453.5},{exam:"2026年5月联考",name:"韩珂馨",idCard:"321183201005062028",yw:90,sx:83,yy:92,ls:64,zz:47,dl:77,total:453},{exam:"2026年5月联考",name:"任佳艳",idCard:"321183200910230824",yw:98,sx:89,yy:82.5,ls:52,zz:62,dl:61,total:444.5},{exam:"2026年5月联考",name:"包智翔",idCard:"321183200912230035",yw:94,sx:89,yy:64,ls:66,zz:56,dl:71,total:440},{exam:"2026年5月联考",name:"朱紫萱",idCard:"321183201004120820",yw:104,sx:61,yy:84,ls:63,zz:56,dl:71,total:439},{exam:"2026年5月联考",name:"葛立文",idCard:"321183200910213610",yw:98,sx:83,yy:54,ls:68,zz:57,dl:77,total:437},{exam:"2026年5月联考",name:"朱宏文",idCard:"321183200910313611",yw:107,sx:64,yy:81,ls:70,zz:69,dl:45,total:436},{exam:"2026年5月联考",name:"胡佳馨",idCard:"320115200909023126",yw:93,sx:76,yy:82,ls:57,zz:62,dl:64,total:434},{exam:"2026年5月联考",name:"李紫涵",idCard:"620825200911252501",yw:106,sx:47,yy:73.5,ls:70,zz:65,dl:71,total:432.5},{exam:"2026年5月联考",name:"张启阳",idCard:"321183201007266219",yw:99,sx:58,yy:72,ls:70,zz:62,dl:71,total:432},{exam:"2026年5月联考",name:"吕洲",idCard:"321183201005184818",yw:85,sx:69,yy:95.5,ls:59,zz:58,dl:59,total:425.5},{exam:"2026年5月联考",name:"黄子涵",idCard:"321183201001193864",yw:90,sx:60,yy:84.5,ls:55,zz:58,dl:74,total:421.5},{exam:"2026年5月联考",name:"管欣然",idCard:"321183201001033828",yw:100,sx:44,yy:86.5,ls:62,zz:70,dl:56,total:418.5},{exam:"2026年5月联考",name:"刘雨昊",idCard:"321183200911100036",yw:107,sx:48,yy:82.5,ls:70,zz:48,dl:56,total:411.5},{exam:"2026年5月联考",name:"吕凯文",idCard:"321183201002184839",yw:90,sx:67,yy:68,ls:60,zz:55,dl:64,total:404},{exam:"2026年5月联考",name:"王宇轩",idCard:"321183201007304852",yw:96,sx:55,yy:70,ls:73,zz:45,dl:64,total:403},{exam:"2026年5月联考",name:"章何弈",idCard:"32118320100127551X",yw:92,sx:45,yy:70,ls:67,zz:51,dl:53,total:378},{exam:"2026年5月联考",name:"张铭泽",idCard:"321183201005280033",yw:91,sx:19,yy:84.5,ls:61,zz:49,dl:61,total:365.5},{exam:"2026年5月联考",name:"许子言",idCard:"321183201003030815",yw:87,sx:35,yy:72.5,ls:71,zz:30,dl:45,total:340.5},{exam:"2026年5月联考",name:"王安冉",idCard:"321183200912242968",yw:85,sx:4,yy:46,ls:64,zz:44,dl:66,total:309},{exam:"2026年5月联考",name:"潘智宸",idCard:"321183201001072413",yw:24,sx:82,yy:53,ls:33,zz:48,dl:0,total:240},{exam:"2026年5月联考",name:"邱守诺",idCard:"371725201008303032",yw:69,sx:0,yy:0,ls:0,zz:0,dl:0,total:69}
 ];
-if(localStorage.getItem('stuData_v')!=='v3'){localStorage.removeItem(KEY_STU);localStorage.setItem('stuData_v','v3');}
-if(localStorage.getItem('scoreData_v')!=='v1'){localStorage.setItem(KEY_SCORE,JSON.stringify(initScoreData));localStorage.setItem('scoreData_v','v1');}
+if(!localStorage.getItem(KEY_SCORE)){localStorage.setItem(KEY_SCORE,JSON.stringify(initScoreData));}
 if(!localStorage.getItem(KEY_STU))localStorage.setItem(KEY_STU,JSON.stringify(initStuData));
 let stuArr=JSON.parse(localStorage.getItem(KEY_STU))||initStuData;
 // 恢复丢失的学生数据
@@ -569,8 +585,6 @@ if(stuArr.length<initStuData.length){stuArr=initStuData.map(function(x){return J
 let scoreArr=JSON.parse(localStorage.getItem(KEY_SCORE))||initScoreData;
 // 数据补充/重命名函数（在同步后调用）
 function ensureLocalScores(){
-  // 恢复丢失的学生数据（如果少于45人说明被覆盖了）
-  var s2=JSON.parse(localStorage.getItem(KEY_STU))||[];if(s2.length<45){localStorage.setItem(KEY_STU,JSON.stringify(initStuData));stuArr=JSON.parse(JSON.stringify(initStuData));}
   var s=JSON.parse(localStorage.getItem(KEY_SCORE))||[];
   s.forEach(function(x){if(x.exam==='2026四月联考'||x.exam==='2026年4月联考'||x.exam==='2026年期中考试')x.exam='2026期中考试';});
   var seen={};s=s.filter(function(x){var k=x.exam+'_'+x.name;if(seen[k])return false;seen[k]=true;return true;});
@@ -765,11 +779,11 @@ function importTutorData(){
 }
 
   window.onload=function(){
-  // 先显示硬编码数据（确保用户立刻看到内容）
+  // 先显示已有数据（不覆盖用户数据）
   try{
-    if(stuArr.length<45){stuArr=JSON.parse(JSON.stringify(initStuData));localStorage.setItem(KEY_STU,JSON.stringify(stuArr));}
-    if(scoreArr.length<20){scoreArr=JSON.parse(JSON.stringify(initScoreData));localStorage.setItem(KEY_SCORE,JSON.stringify(scoreArr));}
-    if(tutorArr.length<40){tutorArr=initTutorData;localStorage.setItem(KEY_TUTOR,JSON.stringify(initTutorData));}
+    if(!localStorage.getItem(KEY_STU)){localStorage.setItem(KEY_STU,JSON.stringify(initStuData));}
+    if(!localStorage.getItem(KEY_SCORE)){localStorage.setItem(KEY_SCORE,JSON.stringify(initScoreData));}
+    if(!localStorage.getItem(KEY_TUTOR)){localStorage.setItem(KEY_TUTOR,JSON.stringify(initTutorData));}
     ensureLocalScores();
     // 从导师数据同步电话到学生档案
     var tc=0;
