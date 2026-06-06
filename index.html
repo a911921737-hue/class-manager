@@ -535,30 +535,15 @@ if(cv>lv){
   var hasCloud = !!(dd.pu&&dd.pu.length)||!!(dd.at&&dd.at.length)||!!(dd.log&&dd.log.length)||!!(dd.score&&dd.score.length)||!!(dd.tutor&&dd.tutor.length);
   var hasLocal = !!(puArr&&puArr.length)||!!(atArr&&atArr.length)||!!(logArr&&logArr.length)||!!(scoreArr&&scoreArr.length)||!!(tutorArr&&tutorArr.length);
   if(hasCloud){
-    var changed = false;
-    // 学生：补充缺失的
-    if(dd.stu){dd.stu.forEach(function(cr){if(!stuArr.some(function(lr){return lr.idCard===cr.idCard;})){stuArr.push(cr);changed=true;}});if(changed)localStorage.setItem(KEY_STU,JSON.stringify(stuArr));}
-    // 成绩：按考试合并。同考试取条目多的那份
-    if(dd.score){
-      var localExams={};scoreArr.forEach(function(s){localExams[s.exam]=localExams[s.exam]||[];localExams[s.exam].push(s);});
-      var cloudExams={};dd.score.forEach(function(s){cloudExams[s.exam]=cloudExams[s.exam]||[];cloudExams[s.exam].push(s);});
-      Object.keys(cloudExams).forEach(function(e){
-        if(!localExams[e]||cloudExams[e].length>localExams[e].length){
-          scoreArr=scoreArr.filter(function(s){return s.exam!==e;});
-          cloudExams[e].forEach(function(s){scoreArr.push(s);});
-          changed=true;
-        }
-      });
-      if(changed)localStorage.setItem(KEY_SCORE,JSON.stringify(scoreArr));
-    }
-    // 违纪/考勤/日志：补充本地没有的
-    if(dd.pu){dd.pu.forEach(function(cr){if(!puArr.some(function(lr){return lr.date===cr.date&&lr.name===cr.name&&lr.type===cr.type;})){puArr.push(cr);changed=1;}});if(changed)localStorage.setItem(KEY_PU,JSON.stringify(puArr));}
-    if(dd.at){dd.at.forEach(function(cr){if(!atArr.some(function(lr){return lr.date===cr.date&&lr.name===cr.name&&lr.status===cr.status;})){atArr.push(cr);changed=1;}});if(changed)localStorage.setItem(KEY_AT,JSON.stringify(atArr));}
-    if(dd.log){dd.log.forEach(function(cr){if(!logArr.some(function(lr){return lr.date===cr.date&&lr.content===cr.content;})){logArr.push(cr);changed=1;}});if(changed)localStorage.setItem(KEY_LOG,JSON.stringify(logArr));}
-    // 导师：补充缺失的
-    if(dd.tutor){dd.tutor.forEach(function(cr){if(!tutorArr.some(function(lr){return lr.name===cr.name;})){tutorArr.push(cr);changed=true;}});if(changed)localStorage.setItem(KEY_TUTOR,JSON.stringify(tutorArr));}
+    // 云端版本更新 → 全量替换本地数据
+    stuArr=dd.stu||initStuData;localStorage.setItem(KEY_STU,JSON.stringify(stuArr));
+    scoreArr=dd.score||[];localStorage.setItem(KEY_SCORE,JSON.stringify(scoreArr));
+    puArr=dd.pu||[];localStorage.setItem(KEY_PU,JSON.stringify(puArr));
+    atArr=dd.at||[];localStorage.setItem(KEY_AT,JSON.stringify(atArr));
+    logArr=dd.log||[];localStorage.setItem(KEY_LOG,JSON.stringify(logArr));
+    tutorArr=dd.tutor||[];localStorage.setItem(KEY_TUTOR,JSON.stringify(tutorArr));
     localStorage.setItem('_v',cv+'');
-    if(changed)refreshAll();
+    refreshAll();
   }else if(hasLocal){
     localStorage.setItem('_v',cv+'');
     up();
