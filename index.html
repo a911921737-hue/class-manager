@@ -734,7 +734,7 @@ function showExamRank(examName){const sel=document.getElementById("sc_exam_selec
 function refreshAll(){
   initExamSelector();renderStu();renderSeats();renderSc();loadDailyAt();renderPu();renderLog();renderTutor();
   document.getElementById("allStu").textContent=stuArr.length;
-  document.getElementById("examCount").textContent=[...new Set(scoreArr.map(x=>x.exam))].length+1;
+  document.getElementById("examCount").textContent=[...new Set(scoreArr.map(x=>x.exam))].length;
   document.getElementById("punishCount").textContent=puArr.length;
   const ep=document.getElementById("examPreview");
   if(ep){
@@ -747,7 +747,7 @@ function refreshAll(){
           if(!s.length)return '';
           var t3=s.slice(0,3),avg=(s.reduce(function(a,x){return a+x.total;},0)/s.length).toFixed(1);
           return '<div style="margin-bottom:12px;padding:12px 16px;border-radius:10px;background:var(--surface-solid);border:0.5px solid var(--line2)"><strong>'+e+'</strong> · '+s.length+'人 · 最高'+s[0].total+'分 · 最低'+s[s.length-1].total+'分 · 平均'+avg+'分<div class="exam-top3">🏆 前三：'+t3.map(function(x){return x.name+"("+x.total+"分)";}).join(" ")+'</div><button class="btn btn-ghost" onclick="showExamRank(\''+e+'\')" style="margin-top:6px;font-size:11px">查看排名</button></div>';
-        }).join('')+'<div style="margin-bottom:12px;padding:12px 16px;border-radius:10px;background:var(--surface-solid);border:0.5px solid var(--line2)"><strong>2026年9月镇江市动态摸排</strong> · 成绩名单已保存 · <button class="btn btn-ghost" onclick="downloadDynamicRanking()" style="font-size:11px">下载名单</button></div>';
+        }).join('');
       } else {
         ep.innerHTML='<div class="empty-state">暂无考试数据</div>';
       }
