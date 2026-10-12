@@ -177,6 +177,13 @@ textarea.form-input { resize: vertical; min-height: 100px; line-height: 1.6; }
 .timeline-content { font-size: 14px; line-height: 1.6; white-space: pre-wrap; color: var(--text2); }
 .timeline-actions { margin-top: 6px; display: flex; gap: 6px; }
 .empty-state { text-align: center; padding: 48px 20px; color: var(--text4); font-size: 14px; line-height: 2; }
+.seat-note { color: var(--text3); font-size: 13px; margin-bottom: 18px; }
+.seat-room { overflow-x: auto; padding: 8px 4px 18px; }
+.seat-grid { min-width: 680px; display: grid; grid-template-columns: repeat(8, minmax(72px, 1fr)); gap: 10px; align-items: center; }
+.seat { min-height: 58px; display: flex; align-items: center; justify-content: center; padding: 8px 4px; border-radius: 12px; background: var(--surface-solid); border: 0.5px solid var(--line2); box-shadow: var(--shadow-sm); font-size: 13px; text-align: center; }
+.seat.empty { min-height: 0; border: 0; box-shadow: none; background: transparent; }
+.seat-row-label { grid-column: 1 / -1; color: var(--text4); font-size: 11px; margin-top: 4px; }
+.podium { margin: 8px auto 0; max-width: 260px; padding: 10px; border-radius: 10px; text-align: center; color: var(--text2); background: var(--orange-light); border: 0.5px solid rgba(227,125,0,0.2); }
 .exam-preview { padding: 4px 0; font-size: 14px; color: var(--text3); line-height: 1.8; }
 .exam-preview strong { color: var(--text); }
 .exam-top3 { font-size: 12px; color: var(--orange); display: flex; gap: 16px; margin-top: 4px; flex-wrap: wrap; }
@@ -260,6 +267,7 @@ textarea.form-input { resize: vertical; min-height: 100px; line-height: 1.6; }
     <div class="sidebar-label">功能菜单</div>
     <div class="menu-item active" onclick="switchPage('home')"><span class="icon-wrap">🏠</span> 数据首页</div>
     <div class="menu-item" onclick="switchPage('student')"><span class="icon-wrap">👤</span> 学生档案</div>
+    <div class="menu-item" onclick="switchPage('seat')"><span class="icon-wrap">💺</span> 座位表</div>
     <div class="menu-item" onclick="switchPage('score')"><span class="icon-wrap">📖</span> 成绩管理</div>
     <div class="menu-item" onclick="switchPage('attend')"><span class="icon-wrap">📅</span> 考勤记录</div>
     <div class="menu-item" onclick="switchPage('punish')"><span class="icon-wrap">⚠️</span> 违纪登记</div>
@@ -315,6 +323,16 @@ textarea.form-input { resize: vertical; min-height: 100px; line-height: 1.6; }
         <div class="section-body">
           <div class="search-bar"><input class="search-input" id="stuSearch" placeholder="姓名 / 身份证号 / 电话 / 住址"><button class="btn btn-success" onclick="searchStu()">搜索</button></div>
           <div class="table-wrap"><table><thead><tr><th>姓名</th><th>性别</th><th>身份证号</th><th>家长电话1</th><th>家长电话2</th><th>家庭住址</th><th>操作</th></tr></thead><tbody id="stuTable"></tbody></table></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="seat" class="page">
+      <div class="section">
+        <div class="section-header"><div class="section-title">座位表</div></div>
+        <div class="section-body">
+          <div class="seat-note">高一（14）班 · 2026年6月8日</div>
+          <div class="seat-room"><div id="seatGrid" class="seat-grid"></div><div class="podium">讲台</div></div>
         </div>
       </div>
     </div>
@@ -661,6 +679,19 @@ var exams=[],seen={};scoreArr.forEach(function(x){if(!seen[x.exam]){seen[x.exam]
 s.innerHTML='';exams.forEach(function(n){var o=document.createElement("option");o.value=n;o.textContent=n;s.appendChild(o);});
 if(s.options.length){var idx=0;for(var i=0;i<s.options.length;i++){if(s.options[i].value===cur){idx=i;break;}}s.selectedIndex=idx;}}
 function switchExam(){refreshAll();}
+const seatRows=[
+  ['韩寅','潘智宸','张俣航','朱宏文','邱守诺'],
+  ['吕洲','王苏豪','王宇轩','章何弈','包智翔','刘雨昊','吕凯文'],
+  ['王安冉','葛立文','吴子晗','袁雨霏','滕欣然','韩珂馨','张铭泽','许子言'],
+  ['陈亦可','郭玥橦','朱紫萱','陈瑞可','李紫涵','管欣然','张梦璇','江文槿'],
+  ['焦子萱','严雨萱','雍涵茜','胡佳馨','纪吴仪','任佳艳','吕煜蕾','王欣欣'],
+  ['黄子涵','赵丝格','路永延','陈际舟','徐文萱','曹秋瑾','赵许琪','朱嘉仪','张启阳']
+];
+function renderSeats(){
+  const el=document.getElementById('seatGrid');
+  if(!el)return;
+  el.innerHTML=seatRows.map(function(row,i){return '<div class="seat-row-label">第'+(i+1)+'排</div>'+row.map(function(name){return '<div class="seat">'+name+'</div>';}).join('');}).join('');
+}
 function addExam(){const n=prompt("输入新考试名称：");if(!n)return;const s=document.getElementById("sc_exam_selector"),o=document.createElement("option");o.value=n;o.textContent=n;s.appendChild(o);s.value=n;}
 function openStuModal(){document.getElementById("stuModal").style.display="flex";["s_name","s_sex","s_idCard","s_tel","s_tel2","s_address"].forEach(id=>document.getElementById(id).value="");}
 function saveStu(){const d={name:document.getElementById("s_name").value.trim(),sex:document.getElementById("s_sex").value.trim(),idCard:document.getElementById("s_idCard").value.trim(),tel:document.getElementById("s_tel").value.trim(),tel2:document.getElementById("s_tel2").value.trim(),address:document.getElementById("s_address").value.trim()};if(!d.idCard||!d.name)return alert("姓名和身份证号不能为空");if(d.idCard.length!==18)return alert("身份证号必须为18位");const idx=stuArr.findIndex(x=>x.idCard===d.idCard);if(idx>=0){if(!confirm(`学生「${d.name}」已存在，是否覆盖？`))return;stuArr[idx]=d;}else stuArr.push(d);localStorage.setItem(KEY_STU,JSON.stringify(stuArr));closeAllModal();refreshAll();syncUpload();}
@@ -696,7 +727,7 @@ function delLog(idx){if(!confirm("确定删除该日志？"))return;logArr.splic
 function renderLog(){const arr=[...logArr].reverse();if(!arr.length){document.getElementById("logTimeline").innerHTML='<div class="empty-state">还没有日志记录，点击上方「写日志」开始记录</div>';return;}let ld="",h="";arr.forEach((i,idx)=>{const ri=logArr.length-1-idx;if(i.date!==ld){if(ld)h+='</div>';h+=`<div class="timeline-day"><div class="timeline-day-label">${i.date}</div>`;ld=i.date;}h+=`<div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-body">${i.time?`<div class="timeline-time">${i.time}</div>`:""}<div class="timeline-content">${i.content}</div>${i.img?`<div style="margin-top:8px"><img src="${i.img}" style="max-width:200px;max-height:120px;object-fit:cover;border-radius:8px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.1)" onclick="viewPuImg('${i.img}')"></div>`:""}<div class="timeline-actions"><button class="btn btn-ghost" onclick="editLog(${ri})" style="padding:3px 12px;font-size:12px">修改</button><button class="btn btn-danger" onclick="delLog(${ri})" style="padding:3px 12px;font-size:12px">删除</button></div></div></div>`;});h+='</div>';document.getElementById("logTimeline").innerHTML=h;}
 function showExamRank(examName){const sel=document.getElementById("sc_exam_selector");if(sel){for(let i=0;i<sel.options.length;i++){if(sel.options[i].value===examName){sel.selectedIndex=i;break;}}}switchPage("score");}
 function refreshAll(){
-  initExamSelector();renderStu();renderSc();loadDailyAt();renderPu();renderLog();renderTutor();
+  initExamSelector();renderStu();renderSeats();renderSc();loadDailyAt();renderPu();renderLog();renderTutor();
   document.getElementById("allStu").textContent=stuArr.length;
   document.getElementById("examCount").textContent=[...new Set(scoreArr.map(x=>x.exam))].length;
   document.getElementById("punishCount").textContent=puArr.length;
