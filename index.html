@@ -693,9 +693,7 @@ function renderSeats(){
   el.innerHTML=seatRows.map(function(row,i){return '<div class="seat-row-label">第'+(i+1)+'排</div>'+row.map(function(name){return '<div class="seat '+(name?'':'empty')+'">'+(name||'')+'</div>';}).join('');}).join('');
 }
 function exportSeats(){
-  const rows=seatRows.map(function(row){return '<tr>'+row.map(function(name){return '<td style="width:12.5%;height:42px;text-align:center;border:'+(name?'1px solid #d9d9d9':'0')+';font-size:14px">'+(name||'')+'</td>';}).join('')+'</tr>';}).join('');
-  const html='\ufeff<html><head><meta charset="utf-8"><style>table{border-collapse:collapse;width:100%;font-family:Microsoft YaHei,Arial}td{vertical-align:middle} .podium{border:2px solid #222;font-size:18px;font-weight:bold;text-align:center;height:70px}</style></head><body><h2>高一（14）班座位表（2026年10月8日）</h2><table>'+rows+'<tr><td colspan="2"></td><td colspan="4" class="podium">讲台</td><td colspan="2"></td></tr></table></body></html>';
-  const blob=new Blob([html],{type:'application/vnd.ms-excel'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='高一（14）班座位表_2026-10-08.xls';a.click();URL.revokeObjectURL(a.href);
+  const a=document.createElement('a');a.href='seat-export.xlsx';a.download='高一（14）班座位表_2026-10-08.xlsx';a.click();
 }
 function addExam(){const n=prompt("输入新考试名称：");if(!n)return;const s=document.getElementById("sc_exam_selector"),o=document.createElement("option");o.value=n;o.textContent=n;s.appendChild(o);s.value=n;}
 function openStuModal(){document.getElementById("stuModal").style.display="flex";["s_name","s_sex","s_idCard","s_tel","s_tel2","s_address"].forEach(id=>document.getElementById(id).value="");}
