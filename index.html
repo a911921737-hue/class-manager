@@ -413,7 +413,7 @@ textarea.form-input { resize: vertical; min-height: 100px; line-height: 1.6; }
           <div class="section-title">👩‍🏫 全员导师制</div>
           <div class="btn-group">
             <button class="btn btn-primary" onclick="openTutorModal()">新增</button>
-            <button class="btn btn-success" onclick="importTutorData()">从Excel批量导入</button>
+            <button class="btn btn-success" onclick="downloadTutorRoster()">下载名单表</button>
             <button class="btn btn-ghost" onclick="exportTutor()">导出</button>
           </div>
         </div>
@@ -662,18 +662,6 @@ const initTutorData=[
   {name:'薛梦瑶',class:'14',sex:'女',tel1:'13862436109',tel2:'18252590720',tutor:'张裕',tutorTel:'15696719629'}
 ];
 let tutorArr=JSON.parse(localStorage.getItem(KEY_TUTOR))||[];
-async function importTutorRoster(){
-  if(localStorage.getItem('tutorRosterVersion')==='2026-09')return;
-  try{
-    const r=await fetch('tutor-roster.json');
-    if(!r.ok)return;
-    tutorArr=await r.json();
-    localStorage.setItem(KEY_TUTOR,JSON.stringify(tutorArr));
-    localStorage.setItem('tutorRosterVersion','2026-09');
-    renderTutor();
-    syncUpload();
-  }catch(e){}
-}
 // 自动填充导师数据（第一次打开就有）
 if(tutorArr.length<40){tutorArr=initTutorData;localStorage.setItem(KEY_TUTOR,JSON.stringify(initTutorData));}
 let atEditIdx=null,puEditIdx=null,logEditIdx=null;
@@ -774,6 +762,7 @@ function exportAtHistory(){exportAt();}
 function exportPu(){var csv="\uFEFF日期,姓名,违纪类型,备注\n";puArr.sort((a,b)=>a.date.localeCompare(b.date)).forEach(s=>{csv+=s.date+","+s.name+","+s.type+","+(s.note||"")+"\n";});var b=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="违纪台账.csv";a.click();}
 function exportLog(){var csv="\uFEFF日期,内容\n";logArr.sort((a,b)=>a.date.localeCompare(b.date)).forEach(s=>{csv+=s.date+",\""+(s.content||"").replace(/"/g,'""')+"\"\n";});var b=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="班级日志.csv";a.click();}
 function exportTutor(){var csv="\uFEFF学生姓名,性别,家长电话1,家长电话2,导师姓名,导师电话\n";tutorArr.forEach(s=>{csv+=s.name+","+(s.sex||"")+","+(s.tel1||"")+","+(s.tel2||"")+","+s.tutor+","+(s.tutorTel||"")+"\n";});var b=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="导师关系.csv";a.click();}
+function downloadTutorRoster(){var a=document.createElement("a");a.href="tutor-roster-download.xlsx";a.download="高二（14）班全员导师名单(1).xlsx";a.click();}
 // 导入2026期中考试成绩
 function importAprilExam(){
   if(scoreArr.some(x=>x.exam==="2026期中考试")&&!confirm("四月联考数据已存在，再次导入将覆盖，确定继续？"))return;
@@ -854,7 +843,7 @@ function importTutorData(){
   var t=document.getElementById("nowTime");if(t)t.textContent=new Date().toLocaleString('zh-CN');
   // 先下载云端数据，再启动自动同步
   // 如果本地有有效数据，也上传到云端（确保手机上的空数据不会覆盖电脑）
-  down().then(function(){return importTutorRoster();}).then(function(){
+  down().then(function(){
     startSync();
     var localData = localStorage.getItem('_v');
     var hasData = (puArr.length>0||atArr.length>0||logArr.length>0||scoreArr.length>0);
