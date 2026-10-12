@@ -680,7 +680,7 @@ s.innerHTML='';exams.forEach(function(n){var o=document.createElement("option");
 if(s.options.length){var idx=0;for(var i=0;i<s.options.length;i++){if(s.options[i].value===cur){idx=i;break;}}s.selectedIndex=idx;}}
 function switchExam(){refreshAll();}
 const seatRows=[
-  ['韩寅','朱宏文','解紫萱','邱守诺','刘雨昊','张俣航'],
+  ['韩寅','朱宏文','解紫萱','','','邱守诺','刘雨昊','张俣航'],
   ['王苏豪','包智翔','李瑶瑶','江文槿','潘智宸','吕洲','吕凯文','张铭泽'],
   ['滕欣然','王安冉','葛立文','王宇轩','章何奕','张启阳','李紫涵','许子言'],
   ['管欣然','韩珂馨','袁雨霏','郭玥橦','陈亦可','陈瑞可','朱紫萱','吴子晗'],
@@ -690,7 +690,7 @@ const seatRows=[
 function renderSeats(){
   const el=document.getElementById('seatGrid');
   if(!el)return;
-  el.innerHTML=seatRows.map(function(row,i){return '<div class="seat-row-label">第'+(i+1)+'排</div>'+row.map(function(name){return '<div class="seat">'+name+'</div>';}).join('');}).join('');
+  el.innerHTML=seatRows.map(function(row,i){return '<div class="seat-row-label">第'+(i+1)+'排</div>'+row.map(function(name){return '<div class="seat '+(name?'':'empty')+'">'+(name||'')+'</div>';}).join('');}).join('');
 }
 function addExam(){const n=prompt("输入新考试名称：");if(!n)return;const s=document.getElementById("sc_exam_selector"),o=document.createElement("option");o.value=n;o.textContent=n;s.appendChild(o);s.value=n;}
 function openStuModal(){document.getElementById("stuModal").style.display="flex";["s_name","s_sex","s_idCard","s_tel","s_tel2","s_address"].forEach(id=>document.getElementById(id).value="");}
