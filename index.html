@@ -414,6 +414,7 @@ textarea.form-input { resize: vertical; min-height: 100px; line-height: 1.6; }
           <div class="btn-group">
             <button class="btn btn-primary" onclick="openTutorModal()">新增</button>
             <button class="btn btn-success" onclick="downloadTutorRoster()">下载名单表</button>
+            <button class="btn btn-success" onclick="downloadDynamicRanking()">下载动态摸排名单</button>
             <button class="btn btn-ghost" onclick="exportTutor()">导出</button>
           </div>
         </div>
@@ -763,6 +764,7 @@ function exportPu(){var csv="\uFEFF日期,姓名,违纪类型,备注\n";puArr.so
 function exportLog(){var csv="\uFEFF日期,内容\n";logArr.sort((a,b)=>a.date.localeCompare(b.date)).forEach(s=>{csv+=s.date+",\""+(s.content||"").replace(/"/g,'""')+"\"\n";});var b=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="班级日志.csv";a.click();}
 function exportTutor(){var csv="\uFEFF学生姓名,性别,家长电话1,家长电话2,导师姓名,导师电话\n";tutorArr.forEach(s=>{csv+=s.name+","+(s.sex||"")+","+(s.tel1||"")+","+(s.tel2||"")+","+s.tutor+","+(s.tutorTel||"")+"\n";});var b=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="导师关系.csv";a.click();}
 function downloadTutorRoster(){var a=document.createElement("a");a.href="tutor-roster-download.xlsx";a.download="高二（14）班全员导师名单(1).xlsx";a.click();}
+function downloadDynamicRanking(){var a=document.createElement("a");a.href="dynamic-ranking-2026-09.xls";a.download="高二（14）班句容三中2026年9月镇江市动态摸排名单汇总表.xls";a.click();}
 // 导入2026期中考试成绩
 function importAprilExam(){
   if(scoreArr.some(x=>x.exam==="2026期中考试")&&!confirm("四月联考数据已存在，再次导入将覆盖，确定继续？"))return;
