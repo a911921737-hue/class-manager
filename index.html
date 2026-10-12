@@ -662,6 +662,18 @@ const initTutorData=[
   {name:'薛梦瑶',class:'14',sex:'女',tel1:'13862436109',tel2:'18252590720',tutor:'张裕',tutorTel:'15696719629'}
 ];
 let tutorArr=JSON.parse(localStorage.getItem(KEY_TUTOR))||[];
+async function importTutorRoster(){
+  if(localStorage.getItem('tutorRosterVersion')==='2026-09')return;
+  try{
+    const r=await fetch('tutor-roster.json');
+    if(!r.ok)return;
+    tutorArr=await r.json();
+    localStorage.setItem(KEY_TUTOR,JSON.stringify(tutorArr));
+    localStorage.setItem('tutorRosterVersion','2026-09');
+    renderTutor();
+    syncUpload();
+  }catch(e){}
+}
 // 自动填充导师数据（第一次打开就有）
 if(tutorArr.length<40){tutorArr=initTutorData;localStorage.setItem(KEY_TUTOR,JSON.stringify(initTutorData));}
 let atEditIdx=null,puEditIdx=null,logEditIdx=null;
@@ -842,7 +854,7 @@ function importTutorData(){
   var t=document.getElementById("nowTime");if(t)t.textContent=new Date().toLocaleString('zh-CN');
   // 先下载云端数据，再启动自动同步
   // 如果本地有有效数据，也上传到云端（确保手机上的空数据不会覆盖电脑）
-  down().then(function(){
+  down().then(function(){return importTutorRoster();}).then(function(){
     startSync();
     var localData = localStorage.getItem('_v');
     var hasData = (puArr.length>0||atArr.length>0||logArr.length>0||scoreArr.length>0);
